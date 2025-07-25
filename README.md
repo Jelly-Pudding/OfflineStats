@@ -1,0 +1,1 @@
+Plugin for MinecraftOffline.net stats. Handles commands like /firstseen, /lastseen, /timeplayed, /kills, /deaths, and /chatter.

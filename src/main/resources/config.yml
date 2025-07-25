@@ -1,0 +1,72 @@
+# Milestone configurations
+milestones:
+  # In hours.
+  timeplayed:
+    enabled: true
+    rewards:
+      1:
+        home_slots: 1
+      25:
+        home_slots: 1
+      50:
+        home_slots: 1
+      100:
+        home_slots: 1
+      500:
+        home_slots: 1
+      1000:
+        home_slots: 1
+      2000:
+        home_slots: 1
+      3000:
+        home_slots: 1
+      5000:
+        home_slots: 1
+
+  kills:
+    enabled: true
+    rewards:
+      10:
+        max_hearts: 1
+      50:
+        max_hearts: 1
+      100:
+        max_hearts: 1
+      200:
+        max_hearts: 1
+      500:
+        max_hearts: 1
+      1000:
+        max_hearts: 1
+      2000:
+        max_hearts: 1
+      3000:
+        max_hearts: 1
+      5000:
+        max_hearts: 1
+      10000:
+        max_hearts: 1
+
+  deaths:
+    enabled: true
+    rewards:
+      5:
+        tokens: 5
+      20:
+        tokens: 25
+      50:
+        tokens: 40
+      100:
+        tokens: 50
+      200:
+        tokens: 100
+      500:
+        tokens: 150
+      1000:
+        tokens: 300
+      5000:
+        tokens: 600
+      10000:
+        tokens: 1000
+      100000:
+        tokens: 10000

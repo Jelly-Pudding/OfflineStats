@@ -1,0 +1,62 @@
+name: OfflineStats
+version: '1.0-SNAPSHOT'
+main: com.jellypudding.offlineStats.OfflineStats
+api-version: '1.21'
+description: "Plugin for MinecraftOffline.net that keeps track of player stats and provides awards on milestones."
+author: AlphaAlex115
+website: www.minecraftoffline.net
+depend: [SimpleHome, SimpleLifesteal, SimpleVote]
+softdepend: [DiscordRelay]
+
+commands:
+  firstseen:
+    description: Check when a player first joined the server
+    usage: /<command> [player]
+    permission: offlinestats.firstseen
+  lastseen:
+    description: Check when a player was last seen on the server
+    usage: /<command> [player]
+    permission: offlinestats.lastseen
+  timeplayed:
+    description: Check how long a player has played on the server
+    usage: /<command> [player]
+    permission: offlinestats.timeplayed
+  kills:
+    description: Check how many kills a player has
+    usage: /<command> [player]
+    permission: offlinestats.kills
+  deaths:
+    description: Check how many deaths a player has
+    usage: /<command> [player]
+    permission: offlinestats.deaths
+  chatter:
+    description: Check how many chat messages a player has sent
+    usage: /<command> [player]
+    permission: offlinestats.chatter
+  offlinestats:
+    description: OfflineStats admin commands
+    usage: /<command> reload
+    permission: offlinestats.admin
+
+permissions:
+  offlinestats.firstseen:
+    description: Permission to use /firstseen command
+    default: true
+  offlinestats.lastseen:
+    description: Permission to use /lastseen command
+    default: true
+  offlinestats.timeplayed:
+    description: Permission to use /timeplayed command
+    default: true
+  offlinestats.kills:
+    description: Permission to use /kills command
+    default: true
+  offlinestats.deaths:
+    description: Permission to use /deaths command
+    default: true
+  offlinestats.chatter:
+    description: Permission to use /chatter command
+    default: true
+  offlinestats.admin:
+    description: Permission to use OfflineStats admin commands
+    default: op
