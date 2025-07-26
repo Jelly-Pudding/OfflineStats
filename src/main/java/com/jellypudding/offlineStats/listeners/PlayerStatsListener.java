@@ -46,9 +46,8 @@ public class PlayerStatsListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
-        if (event.getEntity().getKiller() instanceof Player killer) {
+        if (event.getEntity() instanceof Player && event.getEntity().getKiller() instanceof Player killer) {
             plugin.getDatabaseManager().incrementKills(killer.getUniqueId());
-
             plugin.getMilestoneManager().checkKillMilestones(killer);
         }
     }

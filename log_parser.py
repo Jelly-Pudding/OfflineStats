@@ -29,115 +29,118 @@ class OfflineStatsParser:
         # Base log format
         self.log_pattern = re.compile(r'\[(\d{2}:\d{2}:\d{2})\] \[([^/]+)/([^]]+)\]: (.+)')
 
-        # Player UUID lookup
-        self.uuid_pattern = re.compile(r'UUID of player (\w+) is ([\w-]+)')
+        # Player UUID lookup patterns
+        self.uuid_pattern = re.compile(r'UUID of player (\.[\w]+|[\w]+) is ([\w-]+)')
+        # Floodgate/Bedrock player UUID pattern
+        # Bedrock players connecting through Geyser/Floodgate have usernames with "." prefix
+        self.floodgate_uuid_pattern = re.compile(r'\[floodgate\] Floodgate player logged in as (\.[\w]+) joined \(UUID: ([\w-]+)\)')
 
         # Player login with coordinates
-        self.login_pattern = re.compile(r'(\w+)\[/[^]]+\] logged in with entity id \d+')
+        self.login_pattern = re.compile(r'(\.[\w]+|[\w]+)\[/[^]]+\] logged in with entity id \d+')
 
         # Player join/leave
-        self.join_pattern = re.compile(r'(\w+) joined the game')
-        self.leave_pattern = re.compile(r'(\w+) left the game')
+        self.join_pattern = re.compile(r'(\.[\w]+|[\w]+) joined the game')
+        self.leave_pattern = re.compile(r'(\.[\w]+|[\w]+) left the game')
 
         # PvP deaths (for kill counting) - these award kills to the killer
         self.pvp_death_patterns = [
-            re.compile(r'(\w+) was slain by (\w+)'),
-            re.compile(r'(\w+) was shot by (\w+)'),
-            re.compile(r'(\w+) was blown up by (\w+)'),
-            re.compile(r'(\w+) was fireballed by (\w+)'),
-            re.compile(r'(\w+) was shot by a skull from (\w+)'),
-            re.compile(r'(\w+) was impaled by (\w+)'),
-            re.compile(r'(\w+) was destroyed by (\w+)'),
-            re.compile(r'(\w+) was pummeled by (\w+)'),
-            re.compile(r'(\w+) was killed by (\w+) using magic'),
-            re.compile(r'(\w+) was frozen to death by (\w+)'),
-            re.compile(r'(\w+) was squashed by (\w+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was slain by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was shot by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was blown up by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was fireballed by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was shot by a skull from (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was impaled by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was destroyed by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was pummeled by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was killed by (\.[\w]+|[\w]+) using magic'),
+            re.compile(r'(\.[\w]+|[\w]+) was frozen to death by (\.[\w]+|[\w]+)'),
+            re.compile(r'(\.[\w]+|[\w]+) was squashed by (\.[\w]+|[\w]+)'),
         ]
 
         # All death patterns (comprehensive list from Minecraft documentation)
         self.death_patterns = [
             # Cactus
-            re.compile(r'(\w+) was pricked to death'),
+            re.compile(r'(\.[\w]+|[\w]+) was pricked to death'),
             # Drowning
-            re.compile(r'(\w+) drowned'),
-            re.compile(r'(\w+) died from dehydration'),
+            re.compile(r'(\.[\w]+|[\w]+) drowned'),
+            re.compile(r'(\.[\w]+|[\w]+) died from dehydration'),
             # Elytra
-            re.compile(r'(\w+) experienced kinetic energy'),
+            re.compile(r'(\.[\w]+|[\w]+) experienced kinetic energy'),
             # Explosions
-            re.compile(r'(\w+) blew up'),
-            re.compile(r'(\w+) was blown up by'),
-            re.compile(r'(\w+) was killed by \[Intentional Game Design\]'),
+            re.compile(r'(\.[\w]+|[\w]+) blew up'),
+            re.compile(r'(\.[\w]+|[\w]+) was blown up by'),
+            re.compile(r'(\.[\w]+|[\w]+) was killed by \[Intentional Game Design\]'),
             # Falling
-            re.compile(r'(\w+) hit the ground too hard'),
-            re.compile(r'(\w+) fell from a high place'),
-            re.compile(r'(\w+) fell off a ladder'),
-            re.compile(r'(\w+) fell off some vines'),
-            re.compile(r'(\w+) fell off some weeping vines'),
-            re.compile(r'(\w+) fell off some twisting vines'),
-            re.compile(r'(\w+) fell off scaffolding'),
-            re.compile(r'(\w+) fell while climbing'),
-            re.compile(r'(\w+) was doomed to fall'),
-            re.compile(r'(\w+) was impaled on a stalagmite'),
+            re.compile(r'(\.[\w]+|[\w]+) hit the ground too hard'),
+            re.compile(r'(\.[\w]+|[\w]+) fell from a high place'),
+            re.compile(r'(\.[\w]+|[\w]+) fell off a ladder'),
+            re.compile(r'(\.[\w]+|[\w]+) fell off some vines'),
+            re.compile(r'(\.[\w]+|[\w]+) fell off some weeping vines'),
+            re.compile(r'(\.[\w]+|[\w]+) fell off some twisting vines'),
+            re.compile(r'(\.[\w]+|[\w]+) fell off scaffolding'),
+            re.compile(r'(\.[\w]+|[\w]+) fell while climbing'),
+            re.compile(r'(\.[\w]+|[\w]+) was doomed to fall'),
+            re.compile(r'(\.[\w]+|[\w]+) was impaled on a stalagmite'),
             # Falling blocks
-            re.compile(r'(\w+) was squashed by a falling anvil'),
-            re.compile(r'(\w+) was squashed by a falling block'),
-            re.compile(r'(\w+) was skewered by a falling stalactite'),
+            re.compile(r'(\.[\w]+|[\w]+) was squashed by a falling anvil'),
+            re.compile(r'(\.[\w]+|[\w]+) was squashed by a falling block'),
+            re.compile(r'(\.[\w]+|[\w]+) was skewered by a falling stalactite'),
             # Fire
-            re.compile(r'(\w+) went up in flames'),
-            re.compile(r'(\w+) burned to death'),
-            re.compile(r'(\w+) was burned to a crisp'),
+            re.compile(r'(\.[\w]+|[\w]+) went up in flames'),
+            re.compile(r'(\.[\w]+|[\w]+) burned to death'),
+            re.compile(r'(\.[\w]+|[\w]+) was burned to a crisp'),
             # Firework
-            re.compile(r'(\w+) went off with a bang'),
+            re.compile(r'(\.[\w]+|[\w]+) went off with a bang'),
             # Lava
-            re.compile(r'(\w+) tried to swim in lava'),
+            re.compile(r'(\.[\w]+|[\w]+) tried to swim in lava'),
             # Lightning
-            re.compile(r'(\w+) was struck by lightning'),
+            re.compile(r'(\.[\w]+|[\w]+) was struck by lightning'),
             # Magma
-            re.compile(r'(\w+) discovered the floor was lava'),
-            re.compile(r'(\w+) walked into the danger zone'),
+            re.compile(r'(\.[\w]+|[\w]+) discovered the floor was lava'),
+            re.compile(r'(\.[\w]+|[\w]+) walked into the danger zone'),
             # Magic
-            re.compile(r'(\w+) was killed by magic'),
+            re.compile(r'(\.[\w]+|[\w]+) was killed by magic'),
             # Powder Snow
-            re.compile(r'(\w+) froze to death'),
-            re.compile(r'(\w+) was frozen to death'),
+            re.compile(r'(\.[\w]+|[\w]+) froze to death'),
+            re.compile(r'(\.[\w]+|[\w]+) was frozen to death'),
             # Players/mobs
-            re.compile(r'(\w+) was slain by'),
-            re.compile(r'(\w+) was stung to death'),
-            re.compile(r'(\w+) was obliterated by a sonically-charged shriek'),
+            re.compile(r'(\.[\w]+|[\w]+) was slain by'),
+            re.compile(r'(\.[\w]+|[\w]+) was stung to death'),
+            re.compile(r'(\.[\w]+|[\w]+) was obliterated by a sonically-charged shriek'),
             # Projectiles
-            re.compile(r'(\w+) was shot by'),
-            re.compile(r'(\w+) was pummeled by'),
-            re.compile(r'(\w+) was fireballed by'),
-            re.compile(r'(\w+) was shot by a skull from'),
+            re.compile(r'(\.[\w]+|[\w]+) was shot by'),
+            re.compile(r'(\.[\w]+|[\w]+) was pummeled by'),
+            re.compile(r'(\.[\w]+|[\w]+) was fireballed by'),
+            re.compile(r'(\.[\w]+|[\w]+) was shot by a skull from'),
             # Starving
-            re.compile(r'(\w+) starved to death'),
+            re.compile(r'(\.[\w]+|[\w]+) starved to death'),
             # Suffocation
-            re.compile(r'(\w+) suffocated in a wall'),
-            re.compile(r'(\w+) was squished too much'),
-            re.compile(r'(\w+) was squashed by'),
-            re.compile(r'(\w+) left the confines of this world'),
+            re.compile(r'(\.[\w]+|[\w]+) suffocated in a wall'),
+            re.compile(r'(\.[\w]+|[\w]+) was squished too much'),
+            re.compile(r'(\.[\w]+|[\w]+) was squashed by'),
+            re.compile(r'(\.[\w]+|[\w]+) left the confines of this world'),
             # Sweet Berry
-            re.compile(r'(\w+) was poked to death by a sweet berry bush'),
+            re.compile(r'(\.[\w]+|[\w]+) was poked to death by a sweet berry bush'),
             # Thorns
-            re.compile(r'(\w+) was killed while trying to hurt'),
+            re.compile(r'(\.[\w]+|[\w]+) was killed while trying to hurt'),
             # Trident
-            re.compile(r'(\w+) was impaled by'),
+            re.compile(r'(\.[\w]+|[\w]+) was impaled by'),
             # Mace
-            re.compile(r'(\w+) was destroyed by'),
+            re.compile(r'(\.[\w]+|[\w]+) was destroyed by'),
             # Void
-            re.compile(r'(\w+) fell out of the world'),
-            re.compile(r'(\w+) didn\'t want to live in the same world as'),
+            re.compile(r'(\.[\w]+|[\w]+) fell out of the world'),
+            re.compile(r'(\.[\w]+|[\w]+) didn\'t want to live in the same world as'),
             # Wither
-            re.compile(r'(\w+) withered away'),
+            re.compile(r'(\.[\w]+|[\w]+) withered away'),
             # Generic
-            re.compile(r'(\w+) died'),
-            re.compile(r'(\w+) was killed'),
+            re.compile(r'(\.[\w]+|[\w]+) died'),
+            re.compile(r'(\.[\w]+|[\w]+) was killed'),
         ]
 
         # Chat messages
         self.chat_patterns = [
-            re.compile(r'<(\w+)> '),
-            re.compile(r'\[Not Secure\] <(\w+)> '),
+            re.compile(r'<(\.[\w]+|[\w]+)> '),
+            re.compile(r'\[Not Secure\] <(\.[\w]+|[\w]+)> '),
         ]
 
     def setup_database(self):
@@ -213,6 +216,33 @@ class OfflineStatsParser:
                     VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0)
                 ''', (uuid, username, datetime_str, datetime_str))
                 logger.debug(f"UUID mapping: {username} -> {uuid}")
+
+    def process_floodgate_uuid_event(self, message, timestamp):
+        """Process Floodgate/Bedrock player UUID events"""
+        match = self.floodgate_uuid_pattern.search(message)
+        if match:
+            username, uuid = match.groups()
+            self.player_uuids[username] = uuid
+
+            datetime_str = self.get_datetime_string(timestamp)
+
+            # Check if this UUID already exists
+            cursor = self.conn.execute('SELECT username FROM players WHERE uuid = ?', (uuid,))
+            existing = cursor.fetchone()
+
+            if existing:
+                # Update existing player (might be username change)
+                self.conn.execute('''
+                    UPDATE players SET username = ?, last_seen = ? WHERE uuid = ?
+                ''', (username, datetime_str, uuid))
+                logger.debug(f"Updated existing Bedrock UUID: {username} -> {uuid}")
+            else:
+                # Create new Bedrock player
+                self.conn.execute('''
+                    INSERT INTO players (uuid, username, first_seen, last_seen, time_played, session_start, kills, deaths, chat_messages)
+                    VALUES (?, ?, ?, ?, 0, 0, 0, 0, 0)
+                ''', (uuid, username, datetime_str, datetime_str))
+                logger.debug(f"Bedrock UUID mapping: {username} -> {uuid}")
 
     def process_join_event(self, message, timestamp):
         """Process player join events"""
@@ -337,6 +367,8 @@ class OfflineStatsParser:
                     # Process different event types
                     if 'UUID of player' in message:
                         self.process_uuid_event(message, timestamp)
+                    elif '[floodgate] Floodgate player logged in as' in message:
+                        self.process_floodgate_uuid_event(message, timestamp)
                     elif 'joined the game' in message:
                         self.process_join_event(message, timestamp)
                     elif 'left the game' in message:
