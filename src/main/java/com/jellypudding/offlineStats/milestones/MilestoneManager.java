@@ -244,18 +244,21 @@ public class MilestoneManager {
     }
 
     private void sendTimePlayedAnnouncement(Player player, int hours, int homeSlots) {
+        Component playerName = player.displayName();
         Component message;
         if (homeSlots > 0) {
             String slotText = homeSlots == 1 ? "home slot" : "home slots";
-            message = Component.text(player.getName(), NamedTextColor.GOLD)
+            String hourText = hours == 1 ? "hour" : "hours";
+            message = playerName
                 .append(Component.text(" has reached ", NamedTextColor.YELLOW))
-                .append(Component.text(hours + " hours", NamedTextColor.GREEN))
+                .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
                 .append(Component.text(" of playtime and received ", NamedTextColor.YELLOW))
                 .append(Component.text("+" + homeSlots + " " + slotText + ".", NamedTextColor.AQUA));
         } else {
-            message = Component.text(player.getName(), NamedTextColor.GOLD)
+            String hourText = hours == 1 ? "hour" : "hours";
+            message = playerName
                 .append(Component.text(" has reached ", NamedTextColor.YELLOW))
-                .append(Component.text(hours + " hours", NamedTextColor.GREEN))
+                .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
                 .append(Component.text(" of playtime.", NamedTextColor.YELLOW));
         }
 
@@ -265,9 +268,11 @@ public class MilestoneManager {
             String discordMessage;
             if (homeSlots > 0) {
                 String slotText = homeSlots == 1 ? "home slot" : "home slots";
-                discordMessage = player.getName() + " has reached " + hours + " hours of playtime and received +" + homeSlots + " " + slotText + ".";
+                String hourText = hours == 1 ? "hour" : "hours";
+                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime and received +" + homeSlots + " " + slotText + ".";
             } else {
-                discordMessage = player.getName() + " has reached " + hours + " hours of playtime.";
+                String hourText = hours == 1 ? "hour" : "hours";
+                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
             }
 
             sendDiscordMessage(discordMessage);
@@ -276,33 +281,36 @@ public class MilestoneManager {
 
     private void sendKillAnnouncement(Player player, int kills, int hearts) {
         String heartText = hearts == 1 ? "max heart" : "max hearts";
-        Component message = Component.text(player.getName(), NamedTextColor.GOLD)
+        String killText = kills == 1 ? "kill" : "kills";
+        Component playerName = player.displayName();
+        Component message = playerName
             .append(Component.text(" has reached ", NamedTextColor.YELLOW))
-            .append(Component.text(kills + " kills", NamedTextColor.RED))
+            .append(Component.text(kills + " " + killText, NamedTextColor.RED))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
             .append(Component.text("+" + hearts + " " + heartText + ".", NamedTextColor.DARK_RED));
 
         Bukkit.getServer().broadcast(message);
 
         if (plugin.isDiscordRelayEnabled()) {
-            String discordMessage = player.getName() + " has reached " + kills + " kills and received +" + hearts + " " + heartText + ".";
+            String discordMessage = player.getName() + " has reached " + kills + " " + killText + " and received +" + hearts + " " + heartText + ".";
             sendDiscordMessage(discordMessage);
         }
     }
 
     private void sendDeathAnnouncement(Player player, int deaths, int tokens) {
-        Component title = Component.text("DEATH MILESTONE", NamedTextColor.DARK_RED, TextDecoration.BOLD);
-        Component message = Component.text(player.getName(), NamedTextColor.GOLD)
+        String timeText = deaths == 1 ? "time" : "times";
+        String tokenText = tokens == 1 ? "token" : "tokens";
+        Component playerName = player.displayName();
+        Component message = playerName
             .append(Component.text(" has died ", NamedTextColor.YELLOW))
-            .append(Component.text(deaths + " times", NamedTextColor.RED))
+            .append(Component.text(deaths + " " + timeText, NamedTextColor.RED))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
-            .append(Component.text(tokens + " tokens for their trouble.", NamedTextColor.GOLD));
+            .append(Component.text(tokens + " " + tokenText + " for their trouble.", NamedTextColor.GOLD));
 
-        Bukkit.getServer().broadcast(title);
         Bukkit.getServer().broadcast(message);
 
         if (plugin.isDiscordRelayEnabled()) {
-            String discordMessage = player.getName() + " has died " + deaths + " times and received " + tokens + " tokens for their trouble.";
+            String discordMessage = player.getName() + " has died " + deaths + " " + timeText + " and received " + tokens + " " + tokenText + " for their trouble.";
             sendDiscordMessage(discordMessage);
         }
     }

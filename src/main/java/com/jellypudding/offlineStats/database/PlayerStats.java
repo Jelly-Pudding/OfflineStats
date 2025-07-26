@@ -1,6 +1,7 @@
 package com.jellypudding.offlineStats.database;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -47,11 +48,11 @@ public class PlayerStats {
     }
 
     public String getFormattedFirstSeen() {
-        return formatDate(firstSeen);
+        return formatDateISO8601(firstSeen);
     }
 
     public String getFormattedLastSeen() {
-        return formatDate(lastSeen);
+        return formatDateISO8601(lastSeen);
     }
 
     public String getFormattedTimePlayed() {
@@ -70,10 +71,10 @@ public class PlayerStats {
         return TimeUnit.MILLISECONDS.toHours(totalMillis);
     }
 
-    private String formatDate(String dateStr) {
+    private String formatDateISO8601(String dateStr) {
         try {
             LocalDateTime dateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            return dateTime.format(DateTimeFormatter.ofPattern("MMM dd, yyyy 'at' HH:mm"));
+            return dateTime.atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT);
         } catch (Exception e) {
             return dateStr;
         }

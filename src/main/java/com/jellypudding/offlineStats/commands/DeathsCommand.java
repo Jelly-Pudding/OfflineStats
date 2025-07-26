@@ -14,10 +14,12 @@ public class DeathsCommand extends BaseStatsCommand {
 
     @Override
     protected void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf) {
-        Component message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+        String timeText = stats.getDeaths() == 1 ? "time" : "times";
+        Component playerName = getPlayerDisplayName(stats);
+        Component message = playerName
             .append(Component.text(" has died ", NamedTextColor.YELLOW))
             .append(Component.text(stats.getDeaths(), NamedTextColor.RED))
-            .append(Component.text(" times", NamedTextColor.YELLOW));
+            .append(Component.text(" " + timeText + ".", NamedTextColor.YELLOW));
 
         sender.sendMessage(message);
     }

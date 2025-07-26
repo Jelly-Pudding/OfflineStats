@@ -14,10 +14,12 @@ public class ChatterCommand extends BaseStatsCommand {
 
     @Override
     protected void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf) {
-        Component message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+        String messageText = stats.getChatMessages() == 1 ? "chat message" : "chat messages";
+        Component playerName = getPlayerDisplayName(stats);
+        Component message = playerName
             .append(Component.text(" has sent ", NamedTextColor.YELLOW))
             .append(Component.text(stats.getChatMessages(), NamedTextColor.GREEN))
-            .append(Component.text(" chat messages", NamedTextColor.YELLOW));
+            .append(Component.text(" " + messageText + ".", NamedTextColor.YELLOW));
 
         sender.sendMessage(message);
     }

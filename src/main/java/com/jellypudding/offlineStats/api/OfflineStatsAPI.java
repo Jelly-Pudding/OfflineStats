@@ -172,9 +172,18 @@ public class OfflineStatsAPI {
                 stats.getUsername() + " is currently online." : 
                 stats.getUsername() + " was last seen on " + stats.getFormattedLastSeen();
             case "timeplayed" -> stats.getUsername() + " has played for " + stats.getFormattedTimePlayed();
-            case "kills" -> stats.getUsername() + " has " + stats.getKills() + " kills.";
-            case "deaths" -> stats.getUsername() + " has died " + stats.getDeaths() + " times.";
-            case "chatter" -> stats.getUsername() + " has sent " + stats.getChatMessages() + " chat messages.";
+            case "kills" -> {
+                String killText = stats.getKills() == 1 ? "kill" : "kills";
+                yield stats.getUsername() + " has " + stats.getKills() + " " + killText + ".";
+            }
+            case "deaths" -> {
+                String timeText = stats.getDeaths() == 1 ? "time" : "times";
+                yield stats.getUsername() + " has died " + stats.getDeaths() + " " + timeText + ".";
+            }
+            case "chatter" -> {
+                String messageText = stats.getChatMessages() == 1 ? "chat message" : "chat messages";
+                yield stats.getUsername() + " has sent " + stats.getChatMessages() + " " + messageText + ".";
+            }
             default -> "Unknown stat type: " + statType;
         };
     }

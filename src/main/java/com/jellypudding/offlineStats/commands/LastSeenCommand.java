@@ -14,12 +14,13 @@ public class LastSeenCommand extends BaseStatsCommand {
 
     @Override
     protected void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf) {
+        Component playerName = getPlayerDisplayName(stats);
         Component message;
         if (stats.isOnline()) {
-            message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+            message = playerName
                 .append(Component.text(" is currently online!", NamedTextColor.YELLOW));
         } else {
-            message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+            message = playerName
                 .append(Component.text(" was last seen on ", NamedTextColor.YELLOW))
                 .append(Component.text(stats.getFormattedLastSeen(), NamedTextColor.GREEN));
         }

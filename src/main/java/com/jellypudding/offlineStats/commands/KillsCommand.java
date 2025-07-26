@@ -14,10 +14,12 @@ public class KillsCommand extends BaseStatsCommand {
 
     @Override
     protected void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf) {
-        Component message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+        String killText = stats.getKills() == 1 ? "kill" : "kills";
+        Component playerName = getPlayerDisplayName(stats);
+        Component message = playerName
             .append(Component.text(" has ", NamedTextColor.YELLOW))
             .append(Component.text(stats.getKills(), NamedTextColor.RED))
-            .append(Component.text(" kills", NamedTextColor.YELLOW));
+            .append(Component.text(" " + killText + ".", NamedTextColor.YELLOW));
 
         sender.sendMessage(message);
     }

@@ -14,7 +14,8 @@ public class FirstSeenCommand extends BaseStatsCommand {
 
     @Override
     protected void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf) {
-        Component message = Component.text(stats.getUsername(), NamedTextColor.GOLD)
+        Component playerName = getPlayerDisplayName(stats);
+        Component message = playerName
             .append(Component.text(" first joined on ", NamedTextColor.YELLOW))
             .append(Component.text(stats.getFormattedFirstSeen(), NamedTextColor.GREEN));
 

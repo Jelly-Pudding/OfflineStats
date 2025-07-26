@@ -7,6 +7,7 @@ import com.jellypudding.offlineStats.database.DatabaseManager;
 import com.jellypudding.offlineStats.listeners.PlayerStatsListener;
 import com.jellypudding.offlineStats.milestones.MilestoneManager;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class OfflineStats extends JavaPlugin {
@@ -54,6 +55,14 @@ public final class OfflineStats extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            try {
+                databaseManager.updatePlayerOnQuit(player);
+            } catch (Exception e) {
+                getLogger().warning("Failed to save data for " + player.getName() + " during shutdown: " + e.getMessage());
+            }
+        }
+
         if (databaseManager != null) {
             databaseManager.close();
         }
@@ -86,12 +95,12 @@ public final class OfflineStats extends JavaPlugin {
             getLogger().warning("SimpleVote not found - token rewards will be disabled");
         }
 
-        // Check DiscordRelay (BasicDiscordRelay)
-        if (Bukkit.getPluginManager().getPlugin("BasicDiscordRelay") != null) {
+        // Check DiscordRelay
+        if (Bukkit.getPluginManager().getPlugin("DiscordRelay") != null) {
             discordRelayEnabled = true;
-            getLogger().info("BasicDiscordRelay integration enabled!");
+            getLogger().info("DiscordRelay integration enabled!");
         } else {
-            getLogger().warning("BasicDiscordRelay not found - Discord announcements will be disabled");
+            getLogger().warning("DiscordRelay not found - Discord announcements will be disabled");
         }
     }
 
