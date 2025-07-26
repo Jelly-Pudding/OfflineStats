@@ -147,3 +147,17 @@ public class PlayerStats {
     public String getFormattedTimePlayed()
 }
 ```
+
+## Historical Data Import
+
+1. **Run the parser on your server logs:**
+   ```bash
+   python log_parser.py /path/to/your/minecraft/logs/ --verbose
+   ```
+
+2. **Copy the generated database to your plugin folder:**
+   ```bash
+   cp offlinestats.db /path/to/your/server/plugins/OfflineStats/
+   ```
+
+3. **Restart your server** - The plugin will now have all historical player data.
