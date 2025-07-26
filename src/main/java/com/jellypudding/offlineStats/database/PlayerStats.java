@@ -86,11 +86,16 @@ public class PlayerStats {
         long seconds = TimeUnit.MILLISECONDS.toSeconds(milliseconds) % 60;
 
         if (hours > 0) {
-            return String.format("%d hours, %d minutes", hours, minutes);
+            String hourText = hours == 1 ? "hour" : "hours";
+            String minuteText = minutes == 1 ? "minute" : "minutes";
+            return String.format("%d %s, %d %s", hours, hourText, minutes, minuteText);
         } else if (minutes > 0) {
-            return String.format("%d minutes, %d seconds", minutes, seconds);
+            String minuteText = minutes == 1 ? "minute" : "minutes";
+            String secondText = seconds == 1 ? "second" : "seconds";
+            return String.format("%d %s, %d %s", minutes, minuteText, seconds, secondText);
         } else {
-            return String.format("%d seconds", seconds);
+            String secondText = seconds == 1 ? "second" : "seconds";
+            return String.format("%d %s", seconds, secondText);
         }
     }
 }
