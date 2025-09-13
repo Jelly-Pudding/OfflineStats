@@ -49,11 +49,6 @@ public class AntiFarmingManager {
     }
 
     public boolean shouldCountKill(UUID killerUuid, UUID victimUuid) {
-        // If victim is null (NPC), always count it - we only check for player farming
-        if (victimUuid == null) {
-            return true;
-        }
-
         long currentTime = System.currentTimeMillis();
 
         Map<UUID, List<Long>> killerMap = playerKills.computeIfAbsent(killerUuid, k -> new ConcurrentHashMap<>());
