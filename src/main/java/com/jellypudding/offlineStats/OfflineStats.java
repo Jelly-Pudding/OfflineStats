@@ -6,15 +6,19 @@ import com.jellypudding.offlineStats.listeners.CombatLogListener;
 import com.jellypudding.offlineStats.database.DatabaseManager;
 import com.jellypudding.offlineStats.listeners.PlayerStatsListener;
 import com.jellypudding.offlineStats.milestones.MilestoneManager;
+import com.jellypudding.offlineStats.utils.AntiFarmingManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 public final class OfflineStats extends JavaPlugin {
 
     private DatabaseManager databaseManager;
     private MilestoneManager milestoneManager;
     private OfflineStatsAPI api;
+    private AntiFarmingManager antiFarmingManager;
+    private BukkitTask cleanupTask;
 
     // Plugin integrations
     private boolean simpleHomeEnabled = false;
@@ -37,6 +41,16 @@ public final class OfflineStats extends JavaPlugin {
         // Initialise milestone manager
         milestoneManager = new MilestoneManager(this);
 
+        // Initialise anti-farming manager
+        antiFarmingManager = new AntiFarmingManager(this);
+
+        // Start cleanup task for anti-farming data (runs every 5 minutes)
+        cleanupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, 
+            antiFarmingManager::cleanupOldData, 
+            20L * 60 * 5,
+            20L * 60 * 5
+        );
+
         // Initialise API
         api = new OfflineStatsAPI(this);
 
@@ -55,6 +69,10 @@ public final class OfflineStats extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (cleanupTask != null) {
+            cleanupTask.cancel();
+        }
+
         for (Player player : Bukkit.getOnlinePlayers()) {
             try {
                 databaseManager.updatePlayerOnQuit(player);
@@ -145,5 +163,9 @@ public final class OfflineStats extends JavaPlugin {
 
     public boolean isDiscordRelayEnabled() {
         return discordRelayEnabled;
+    }
+
+    public AntiFarmingManager getAntiFarmingManager() {
+        return antiFarmingManager;
     }
 }

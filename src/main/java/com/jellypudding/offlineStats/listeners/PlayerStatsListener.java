@@ -39,16 +39,19 @@ public class PlayerStatsListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
 
-        plugin.getDatabaseManager().incrementDeaths(player.getUniqueId());
-
-        plugin.getMilestoneManager().checkDeathMilestones(player);
+        if (plugin.getAntiFarmingManager().shouldCountDeath(player.getUniqueId())) {
+            plugin.getDatabaseManager().incrementDeaths(player.getUniqueId());
+            plugin.getMilestoneManager().checkDeathMilestones(player);
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onEntityDeath(EntityDeathEvent event) {
-        if (event.getEntity() instanceof Player && event.getEntity().getKiller() instanceof Player killer) {
-            plugin.getDatabaseManager().incrementKills(killer.getUniqueId());
-            plugin.getMilestoneManager().checkKillMilestones(killer);
+        if (event.getEntity() instanceof Player victim && event.getEntity().getKiller() instanceof Player killer) {
+            if (plugin.getAntiFarmingManager().shouldCountKill(killer.getUniqueId(), victim.getUniqueId())) {
+                plugin.getDatabaseManager().incrementKills(killer.getUniqueId());
+                plugin.getMilestoneManager().checkKillMilestones(killer);
+            }
         }
     }
 

@@ -12,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.metadata.MetadataValue;
 
 import java.util.List;
+import java.util.UUID;
 
 public class CombatLogListener implements Listener {
 
@@ -35,6 +36,16 @@ public class CombatLogListener implements Listener {
             return;
         }
 
+        // Extract the original player's UUID from the metadata
+        UUID originalPlayerUuid = null;
+        try {
+            String uuidString = metadata.get(0).asString();
+            originalPlayerUuid = UUID.fromString(uuidString);
+        } catch (Exception e) {
+            plugin.getLogger().warning("Failed to parse UUID from combat log NPC metadata: " + e.getMessage());
+            return;
+        }
+
         Player killer = null;
         Entity damager = event.getDamager();
 
@@ -46,11 +57,19 @@ public class CombatLogListener implements Listener {
             }
         }
 
-        if (killer != null) {
-            plugin.getDatabaseManager().incrementKills(killer.getUniqueId());
-            plugin.getLogger().info("Player " + killer.getName() + " killed a combat log NPC - kill count incremented");
+        if (originalPlayerUuid != null && plugin.getAntiFarmingManager().shouldCountDeath(originalPlayerUuid)) {
+            plugin.getDatabaseManager().incrementDeaths(originalPlayerUuid);
+            plugin.getLogger().info("Combat log NPC death counted for original player " + originalPlayerUuid + " - death count incremented");
+        }
 
-            plugin.getMilestoneManager().checkKillMilestones(killer);
+        // Only count the kill if there was a player killer
+        if (killer != null && originalPlayerUuid != null) {
+            if (plugin.getAntiFarmingManager().shouldCountKill(killer.getUniqueId(), originalPlayerUuid)) {
+                plugin.getDatabaseManager().incrementKills(killer.getUniqueId());
+                plugin.getMilestoneManager().checkKillMilestones(killer);
+                
+                plugin.getLogger().info("Player " + killer.getName() + " killed a combat log NPC - kill count incremented");
+            }
         }
     }
 }

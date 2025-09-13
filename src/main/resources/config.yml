@@ -70,3 +70,13 @@ milestones:
         tokens: 1000
       100000:
         tokens: 10000
+
+anti-farming:
+  # Time window in minutes to check for farming behaviour.
+  time-window-minutes: 10
+
+  # Maximum deaths allowed in the time window before considering it farming.
+  max-deaths-in-window: 20
+
+  # Maximum kills against the same victim in the time window before considering it farming
+  max-kills-same-victim-in-window: 20

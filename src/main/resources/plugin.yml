@@ -1,5 +1,5 @@
 name: OfflineStats
-version: '1.0-SNAPSHOT'
+version: '1.0'
 main: com.jellypudding.offlineStats.OfflineStats
 api-version: '1.21'
 description: "Plugin for MinecraftOffline.net that keeps track of player stats and provides awards on milestones."
