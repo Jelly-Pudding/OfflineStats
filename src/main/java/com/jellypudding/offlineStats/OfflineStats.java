@@ -9,6 +9,7 @@ import com.jellypudding.offlineStats.milestones.MilestoneManager;
 import com.jellypudding.offlineStats.utils.AntiFarmingManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -25,6 +26,7 @@ public final class OfflineStats extends JavaPlugin {
     private boolean simpleLifestealEnabled = false;
     private boolean simpleVoteEnabled = false;
     private boolean discordRelayEnabled = false;
+    private boolean chromaTagEnabled = false;
 
     @Override
     public void onEnable() {
@@ -64,7 +66,8 @@ public final class OfflineStats extends JavaPlugin {
         getLogger().info("Plugin integrations: SimpleHome=" + simpleHomeEnabled + 
                         ", SimpleLifesteal=" + simpleLifestealEnabled + 
                         ", SimpleVote=" + simpleVoteEnabled + 
-                        ", DiscordRelay=" + discordRelayEnabled);
+                        ", DiscordRelay=" + discordRelayEnabled +
+                        ", ChromaTag=" + chromaTagEnabled);
     }
 
     @Override
@@ -120,6 +123,15 @@ public final class OfflineStats extends JavaPlugin {
         } else {
             getLogger().warning("DiscordRelay not found - Discord announcements will be disabled");
         }
+
+        // Check ChromaTag
+        Plugin chromaTagPlugin = Bukkit.getPluginManager().getPlugin("ChromaTag");
+        if (chromaTagPlugin != null && chromaTagPlugin.isEnabled()) {
+            chromaTagEnabled = true;
+            getLogger().info("ChromaTag integration enabled!");
+        } else {
+            getLogger().warning("ChromaTag not found - player name colours will use defaults");
+        }
     }
 
     private void registerListeners() {
@@ -135,6 +147,10 @@ public final class OfflineStats extends JavaPlugin {
         getCommand("deaths").setExecutor(new DeathsCommand(this));
         getCommand("chatter").setExecutor(new ChatterCommand(this));
         getCommand("offlinestats").setExecutor(new OfflineStatsCommand(this));
+
+        LeaderboardCommand leaderboardCommand = new LeaderboardCommand(this);
+        getCommand("leaderboard").setExecutor(leaderboardCommand);
+        getCommand("leaderboard").setTabCompleter(leaderboardCommand);
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -167,5 +183,9 @@ public final class OfflineStats extends JavaPlugin {
 
     public AntiFarmingManager getAntiFarmingManager() {
         return antiFarmingManager;
+    }
+
+    public boolean isChromaTagEnabled() {
+        return chromaTagEnabled;
     }
 }

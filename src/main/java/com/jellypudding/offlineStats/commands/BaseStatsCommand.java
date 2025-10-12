@@ -5,7 +5,6 @@ import com.jellypudding.offlineStats.database.PlayerStats;
 import com.jellypudding.offlineStats.utils.PlayerUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -67,12 +66,7 @@ public abstract class BaseStatsCommand implements CommandExecutor {
     }
 
     protected Component getPlayerDisplayName(PlayerStats stats) {
-        Player onlinePlayer = Bukkit.getPlayerExact(stats.getUsername());
-        if (onlinePlayer != null) {
-            return onlinePlayer.displayName();
-        }
-
-        return Component.text(stats.getUsername(), NamedTextColor.GOLD);
+        return PlayerUtil.getPlayerDisplayName(stats.getUsername(), stats.getUuid());
     }
 
     protected abstract void executeCommand(CommandSender sender, PlayerStats stats, boolean isSelf);

@@ -4,11 +4,11 @@ import com.jellypudding.offlineStats.OfflineStats;
 import com.jellypudding.offlineStats.database.PlayerStats;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.configuration.ConfigurationSection;
 
+import java.awt.Color;
 import java.util.logging.Level;
 import java.util.UUID;
 
@@ -275,7 +275,7 @@ public class MilestoneManager {
                 discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
             }
 
-            sendDiscordMessage(discordMessage);
+            sendDiscordMessage("Playtime Milestone", discordMessage, Color.GREEN);
         }
     }
 
@@ -293,7 +293,7 @@ public class MilestoneManager {
 
         if (plugin.isDiscordRelayEnabled()) {
             String discordMessage = player.getName() + " has reached " + kills + " " + killText + " and received +" + hearts + " " + heartText + ".";
-            sendDiscordMessage(discordMessage);
+            sendDiscordMessage("Kill Milestone", discordMessage, Color.RED);
         }
     }
 
@@ -311,18 +311,18 @@ public class MilestoneManager {
 
         if (plugin.isDiscordRelayEnabled()) {
             String discordMessage = player.getName() + " has died " + deaths + " " + timeText + " and received " + tokens + " " + tokenText + " for their trouble.";
-            sendDiscordMessage(discordMessage);
+            sendDiscordMessage("Death Milestone", discordMessage, Color.BLACK);
         }
     }
 
-    private void sendDiscordMessage(String message) {
+    private void sendDiscordMessage(String title, String message, Color color) {
         try {
             Class<?> discordRelayAPI = Class.forName("com.jellypudding.discordRelay.DiscordRelayAPI");
             java.lang.reflect.Method isReady = discordRelayAPI.getMethod("isReady");
-            java.lang.reflect.Method sendCustomMessage = discordRelayAPI.getMethod("sendCustomMessage", String.class);
+            java.lang.reflect.Method sendFormattedMessage = discordRelayAPI.getMethod("sendFormattedMessage", String.class, String.class, Color.class);
 
             if ((Boolean) isReady.invoke(null)) {
-                sendCustomMessage.invoke(null, message);
+                sendFormattedMessage.invoke(null, title, message, color);
             }
         } catch (Exception e) {
             plugin.getLogger().warning("Failed to send Discord announcement: " + e.getMessage());

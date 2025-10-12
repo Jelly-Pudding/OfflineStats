@@ -1,8 +1,12 @@
 package com.jellypudding.offlineStats.utils;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.util.UUID;
 
@@ -47,5 +51,28 @@ public class PlayerUtil {
         }
 
         return playerName;
+    }
+
+    public static Component getPlayerDisplayName(String playerName, UUID playerUuid) {
+        Player onlinePlayer = Bukkit.getPlayerExact(playerName);
+        if (onlinePlayer != null) {
+            return onlinePlayer.displayName();
+        }
+
+        Plugin chromaTagPlugin = Bukkit.getPluginManager().getPlugin("ChromaTag");
+        if (chromaTagPlugin != null && chromaTagPlugin.isEnabled()) {
+            try {
+                Class<?> chromaTagClass = chromaTagPlugin.getClass();
+                java.lang.reflect.Method getPlayerColourMethod = chromaTagClass.getMethod("getPlayerColor", UUID.class);
+                TextColor colour = (TextColor) getPlayerColourMethod.invoke(chromaTagPlugin, playerUuid);
+
+                if (colour != null) {
+                    return Component.text(playerName, colour);
+                }
+            } catch (Exception e) {
+            }
+        }
+        // Fallback.
+        return Component.text(playerName, NamedTextColor.GOLD);
     }
 }

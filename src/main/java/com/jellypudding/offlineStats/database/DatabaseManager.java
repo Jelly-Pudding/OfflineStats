@@ -250,4 +250,81 @@ public class DatabaseManager {
         }
         return totalTime;
     }
+
+    public java.util.List<PlayerStats> getTopPlayersByTimePlayed(int limit) {
+        String query = """
+            SELECT *,
+                   CASE WHEN session_start > 0
+                        THEN time_played + (? - session_start)
+                        ELSE time_played
+                   END as total_time_played
+            FROM players
+            ORDER BY total_time_played DESC
+            LIMIT ?
+        """;
+
+        java.util.List<PlayerStats> results = new java.util.ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setLong(1, System.currentTimeMillis());
+            stmt.setInt(2, limit);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                results.add(new PlayerStats(
+                    UUID.fromString(rs.getString("uuid")),
+                    rs.getString("username"),
+                    rs.getString("first_seen"),
+                    rs.getString("last_seen"),
+                    rs.getLong("time_played"),
+                    rs.getLong("session_start"),
+                    rs.getInt("kills"),
+                    rs.getInt("deaths"),
+                    rs.getInt("chat_messages")
+                ));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error getting top players by time played", e);
+        }
+        return results;
+    }
+
+    public java.util.List<PlayerStats> getTopPlayersByKills(int limit) {
+        String query = "SELECT * FROM players ORDER BY kills DESC LIMIT ?";
+        return executeLeaderboardQuery(query, limit);
+    }
+
+    public java.util.List<PlayerStats> getTopPlayersByDeaths(int limit) {
+        String query = "SELECT * FROM players ORDER BY deaths DESC LIMIT ?";
+        return executeLeaderboardQuery(query, limit);
+    }
+
+    public java.util.List<PlayerStats> getTopPlayersByChatMessages(int limit) {
+        String query = "SELECT * FROM players ORDER BY chat_messages DESC LIMIT ?";
+        return executeLeaderboardQuery(query, limit);
+    }
+
+    private java.util.List<PlayerStats> executeLeaderboardQuery(String query, int limit) {
+        java.util.List<PlayerStats> results = new java.util.ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, limit);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                results.add(new PlayerStats(
+                    UUID.fromString(rs.getString("uuid")),
+                    rs.getString("username"),
+                    rs.getString("first_seen"),
+                    rs.getString("last_seen"),
+                    rs.getLong("time_played"),
+                    rs.getLong("session_start"),
+                    rs.getInt("kills"),
+                    rs.getInt("deaths"),
+                    rs.getInt("chat_messages")
+                ));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error executing leaderboard query", e);
+        }
+        return results;
+    }
 }

@@ -1,17 +1,14 @@
 # OfflineStats Plugin
-
-A comprehensive player statistics tracking plugin for Minecraft 1.21.8 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
+A comprehensive player statistics tracking plugin for Minecraft 1.21.10 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
 
 ## Features
-
 - **Player Statistics Tracking**: Time played, first seen, last seen, kills, deaths, and chat messages
 - **Milestone Rewards**: Configurable rewards for reaching playtime, kill, and death milestones
-- **Multi-Plugin Integration**: Works with SimpleHome, SimpleLifesteal, SimpleVote, and DiscordRelay
+- **Multi-Plugin Integration**: Works with SimpleHome, SimpleLifesteal, SimpleVote, DiscordRelay, and ChromaTag
 - **Developer API**: Full API access for other plugins
 - **Announcements**: In-game and Discord milestone announcements
 
 ## Commands
-
 | Command | Permission | Description |
 |---------|------------|-------------|
 | `/firstseen [player]` | `offlinestats.firstseen` | Show when a player first joined |
@@ -20,12 +17,18 @@ A comprehensive player statistics tracking plugin for Minecraft 1.21.8 servers. 
 | `/kills [player]` | `offlinestats.kills` | Show total kills |
 | `/deaths [player]` | `offlinestats.deaths` | Show total deaths |
 | `/chatter [player]` | `offlinestats.chatter` | Show total chat messages |
+| `/leaderboard [category]` | `offlinestats.leaderboard` | Show top 10 leaderboard in a given category (aliases: `/lb`, `/top`) |
 | `/offlinestats reload` | `offlinestats.admin` | Reload plugin configuration |
+
+### Leaderboard Categories
+- `timeplayed` - Top players by playtime (default)
+- `kills` - Top players by kills
+- `deaths` - Top players by deaths
+- `chatter` - Top players by chat messages
 
 ## API
 
 ### Setup Dependencies
-
 1. Download the latest OfflineStats.jar and place it in a libs directory
 2. Add this to your `build.gradle` file:
 
@@ -44,7 +47,6 @@ softdepend: [OfflineStats]
 ```
 
 ### Getting OfflineStats Instance
-
 ```java
 import org.bukkit.Bukkit;
 import com.jellypudding.offlineStats.OfflineStats;
@@ -60,7 +62,6 @@ if (offlineStatsPlugin instanceof OfflineStats && offlineStatsPlugin.isEnabled()
 ### Available API Methods
 
 #### Basic Player Statistics
-
 ```java
 // Get complete player statistics by name
 PlayerStats stats = api.getPlayerStats("PlayerName");
@@ -81,7 +82,6 @@ PlayerStats stats = api.getPlayerStats(playerUUID);
 ```
 
 #### Individual Statistics
-
 ```java
 // Get specific statistics by player name
 long firstSeen = api.getPlayerFirstSeen("PlayerName");
@@ -101,7 +101,6 @@ int chatMessages = api.getPlayerChatMessages(playerUUID);
 ```
 
 #### Formatted Statistics
-
 ```java
 // Get human-readable formatted statistics
 String formatted = api.getFormattedStat("PlayerName", "firstseen");
@@ -125,7 +124,6 @@ String formatted = api.getFormattedStat("PlayerName", "chatter");
 ```
 
 ### PlayerStats Object
-
 The `PlayerStats` object provides these methods:
 
 ```java
@@ -149,7 +147,6 @@ public class PlayerStats {
 ```
 
 ## Historical Data Import
-
 1. **Run the parser on your server logs:**
    ```bash
    python log_parser.py /path/to/your/minecraft/logs/ --verbose
