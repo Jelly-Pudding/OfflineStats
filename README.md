@@ -55,7 +55,7 @@ import com.jellypudding.offlineStats.api.OfflineStatsAPI;
 Plugin offlineStatsPlugin = Bukkit.getPluginManager().getPlugin("OfflineStats");
 if (offlineStatsPlugin instanceof OfflineStats && offlineStatsPlugin.isEnabled()) {
     OfflineStats offlineStats = (OfflineStats) offlineStatsPlugin;
-    OfflineStatsAPI api = offlineStats.getApi();
+    OfflineStatsAPI api = offlineStats.getAPI();
 }
 ```
 

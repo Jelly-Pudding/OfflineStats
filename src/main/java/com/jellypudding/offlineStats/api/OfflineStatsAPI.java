@@ -150,6 +150,85 @@ public class OfflineStatsAPI {
     }
 
     /**
+     * Get a player's first seen timestamp by UUID
+     * @param playerUuid The player's UUID
+     * @return First seen timestamp in milliseconds or 0 if player not found
+     */
+    public long getPlayerFirstSeen(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        if (stats == null) return 0;
+        try {
+            return java.time.LocalDateTime.parse(stats.getFirstSeen(), 
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                .atZone(java.time.ZoneOffset.UTC).toInstant().toEpochMilli();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get a player's last seen timestamp by UUID
+     * @param playerUuid The player's UUID
+     * @return Last seen timestamp in milliseconds or 0 if player not found
+     */
+    public long getPlayerLastSeen(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        if (stats == null) return 0;
+        try {
+            return java.time.LocalDateTime.parse(stats.getLastSeen(), 
+                java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                .atZone(java.time.ZoneOffset.UTC).toInstant().toEpochMilli();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    /**
+     * Get a player's time played in milliseconds by UUID
+     * @param playerUuid The player's UUID
+     * @return Time played in milliseconds or 0 if player not found
+     */
+    public long getPlayerTimePlayed(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        if (stats == null) return 0;
+        long totalTime = stats.getTimePlayed();
+        if (stats.getSessionStart() > 0) {
+            totalTime += (System.currentTimeMillis() - stats.getSessionStart());
+        }
+        return totalTime;
+    }
+
+    /**
+     * Get a player's kill count by UUID
+     * @param playerUuid The player's UUID
+     * @return Kill count or 0 if player not found
+     */
+    public int getPlayerKills(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        return stats != null ? stats.getKills() : 0;
+    }
+
+    /**
+     * Get a player's death count by UUID
+     * @param playerUuid The player's UUID
+     * @return Death count or 0 if player not found
+     */
+    public int getPlayerDeaths(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        return stats != null ? stats.getDeaths() : 0;
+    }
+
+    /**
+     * Get a player's chat message count by UUID
+     * @param playerUuid The player's UUID
+     * @return Chat message count or 0 if player not found
+     */
+    public int getPlayerChatMessages(UUID playerUuid) {
+        PlayerStats stats = getPlayerStats(playerUuid);
+        return stats != null ? stats.getChatMessages() : 0;
+    }
+
+    /**
      * Get formatted statistics for Discord commands
      * @param playerName The player's name
      * @param statType The type of stat (firstseen, lastseen, timeplayed, kills, deaths, chatter)
