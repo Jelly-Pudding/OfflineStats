@@ -5,7 +5,6 @@ import com.jellypudding.offlineStats.database.PlayerStats;
 import com.jellypudding.offlineStats.utils.PlayerUtil;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -76,13 +75,24 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
     private void displayLeaderboard(CommandSender sender, String category, List<PlayerStats> players) {
         String categoryDisplay = getCategoryDisplayName(category);
 
-        Component header = Component.text("-------- ", NamedTextColor.GRAY)
-            .append(Component.text("TOP " + categoryDisplay.toUpperCase(), NamedTextColor.GOLD, TextDecoration.BOLD))
-            .append(Component.text(" --------", NamedTextColor.GRAY));
+        int maxNameLength = players.stream()
+            .mapToInt(stats -> stats.getUsername().length())
+            .max()
+            .orElse(10);
+
+        int nameColumnWidth = Math.max(maxNameLength + 2, 12);
+
+        String headerText = "TOP " + categoryDisplay.toUpperCase();
+        int totalWidth = Math.max(nameColumnWidth + 20, headerText.length() + 16);
+        String dashes = "-".repeat(totalWidth);
+
+        Component header = Component.text(dashes.substring(0, 8) + " ", NamedTextColor.GRAY)
+            .append(Component.text(headerText, NamedTextColor.GOLD))
+            .append(Component.text(" " + dashes.substring(0, totalWidth - headerText.length() - 9), NamedTextColor.GRAY));
 
         sender.sendMessage(header);
 
-        // Player entries
+        // Player entries with proper alignment
         for (int i = 0; i < players.size(); i++) {
             PlayerStats stats = players.get(i);
             int rank = i + 1;
@@ -91,27 +101,21 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
             Component playerName = PlayerUtil.getPlayerDisplayName(stats.getUsername(), stats.getUuid());
             Component value = getValueComponent(category, stats);
 
-            // Create aligned entry: "  1. PlayerName ........... 123 kills"
-            String dots = createDots(stats.getUsername(), 20);
+            int spacesNeeded = nameColumnWidth - stats.getUsername().length();
+            String spacing = " ".repeat(Math.max(spacesNeeded, 1));
 
             Component entry = rankComponent
                 .append(Component.text(" ", NamedTextColor.WHITE))
                 .append(playerName)
-                .append(Component.text(" " + dots + " ", NamedTextColor.DARK_GRAY))
+                .append(Component.text(spacing, NamedTextColor.WHITE))
                 .append(value);
 
             sender.sendMessage(entry);
         }
 
-        // Footer
-        Component footer = Component.text("--------------------------------", NamedTextColor.GRAY);
+        // Footer with matching length
+        Component footer = Component.text(dashes, NamedTextColor.GRAY);
         sender.sendMessage(footer);
-    }
-
-    private String createDots(String playerName, int totalWidth) {
-        int nameLength = playerName.length();
-        int dotsNeeded = Math.max(3, totalWidth - nameLength);
-        return ".".repeat(dotsNeeded);
     }
 
     private String getCategoryDisplayName(String category) {

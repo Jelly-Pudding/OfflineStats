@@ -1,6 +1,7 @@
 package com.jellypudding.offlineStats.listeners;
 
 import com.jellypudding.offlineStats.OfflineStats;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -9,18 +10,18 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.metadata.MetadataValue;
+import org.bukkit.persistence.PersistentDataType;
 
-import java.util.List;
 import java.util.UUID;
 
 public class CombatLogListener implements Listener {
 
     private final OfflineStats plugin;
-    private final String battleLockMetaKey = "BattleLock_CombatLog";
+    private final NamespacedKey battleLockKey;
 
     public CombatLogListener(OfflineStats plugin) {
         this.plugin = plugin;
+        this.battleLockKey = new NamespacedKey("battlelock", "combat_log_player_id");
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -30,19 +31,18 @@ public class CombatLogListener implements Listener {
             return;
         }
 
-        // Check if this NPC has BattleLock combat log metadata.
-        List<MetadataValue> metadata = npc.getMetadata(battleLockMetaKey);
-        if (metadata.isEmpty()) {
+        // Check if this is a BattleLock combat log NPC
+        if (!npc.getPersistentDataContainer().has(battleLockKey, PersistentDataType.STRING)) {
             return;
         }
 
-        // Extract the original player's UUID from the metadata
+        // Extract the original player's UUID from the persistent data
+        String playerUuidString = npc.getPersistentDataContainer().get(battleLockKey, PersistentDataType.STRING);
         UUID originalPlayerUuid = null;
         try {
-            String uuidString = metadata.get(0).asString();
-            originalPlayerUuid = UUID.fromString(uuidString);
+            originalPlayerUuid = UUID.fromString(playerUuidString);
         } catch (Exception e) {
-            plugin.getLogger().warning("Failed to parse UUID from combat log NPC metadata: " + e.getMessage());
+            plugin.getLogger().warning("Failed to parse UUID from combat log NPC persistent data: " + e.getMessage());
             return;
         }
 
