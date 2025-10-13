@@ -75,45 +75,31 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
     private void displayLeaderboard(CommandSender sender, String category, List<PlayerStats> players) {
         String categoryDisplay = getCategoryDisplayName(category);
 
-        int maxNameLength = players.stream()
-            .mapToInt(stats -> stats.getUsername().length())
-            .max()
-            .orElse(10);
-
-        int nameColumnWidth = Math.max(maxNameLength + 2, 12);
-
         String headerText = "TOP " + categoryDisplay.toUpperCase();
-        int totalWidth = Math.max(nameColumnWidth + 20, headerText.length() + 16);
-        String dashes = "-".repeat(totalWidth);
+        String dashes = "-".repeat(40);
 
         Component header = Component.text(dashes.substring(0, 8) + " ", NamedTextColor.GRAY)
             .append(Component.text(headerText, NamedTextColor.GOLD))
-            .append(Component.text(" " + dashes.substring(0, totalWidth - headerText.length() - 9), NamedTextColor.GRAY));
+            .append(Component.text(" " + dashes.substring(0, 40 - headerText.length() - 9), NamedTextColor.GRAY));
 
         sender.sendMessage(header);
 
-        // Player entries with proper alignment
+        // Player entries
         for (int i = 0; i < players.size(); i++) {
             PlayerStats stats = players.get(i);
             int rank = i + 1;
 
-            Component rankComponent = Component.text(String.format("%2d.", rank), NamedTextColor.WHITE);
-            Component playerName = PlayerUtil.getPlayerDisplayName(stats.getUsername(), stats.getUuid());
-            Component value = getValueComponent(category, stats);
-
-            int spacesNeeded = nameColumnWidth - stats.getUsername().length();
-            String spacing = " ".repeat(Math.max(spacesNeeded, 1));
-
-            Component entry = rankComponent
-                .append(Component.text(" ", NamedTextColor.WHITE))
-                .append(playerName)
-                .append(Component.text(spacing, NamedTextColor.WHITE))
-                .append(value);
+            String rankStr = String.format("%2d. ", rank);
+            
+            Component entry = Component.text(rankStr, NamedTextColor.WHITE)
+                .append(PlayerUtil.getPlayerDisplayName(stats.getUsername(), stats.getUuid()))
+                .append(Component.text(" - ", NamedTextColor.GRAY))
+                .append(getValueComponent(category, stats));
 
             sender.sendMessage(entry);
         }
 
-        // Footer with matching length
+        // Footer
         Component footer = Component.text(dashes, NamedTextColor.GRAY);
         sender.sendMessage(footer);
     }
