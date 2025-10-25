@@ -244,39 +244,42 @@ public class MilestoneManager {
     }
 
     private void sendTimePlayedAnnouncement(Player player, int hours, int homeSlots) {
-        Component playerName = player.displayName();
-        Component message;
-        if (homeSlots > 0) {
-            String slotText = homeSlots == 1 ? "home slot" : "home slots";
-            String hourText = hours == 1 ? "hour" : "hours";
-            message = playerName
-                .append(Component.text(" has reached ", NamedTextColor.YELLOW))
-                .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
-                .append(Component.text(" of playtime and received ", NamedTextColor.YELLOW))
-                .append(Component.text("+" + homeSlots + " " + slotText + ".", NamedTextColor.AQUA));
-        } else {
-            String hourText = hours == 1 ? "hour" : "hours";
-            message = playerName
-                .append(Component.text(" has reached ", NamedTextColor.YELLOW))
-                .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
-                .append(Component.text(" of playtime.", NamedTextColor.YELLOW));
-        }
-
-        Bukkit.getServer().broadcast(message);
-
-        if (plugin.isDiscordRelayEnabled()) {
-            String discordMessage;
+        // Delay the announcement to ensure the player is fully connected so they can see the message.
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            Component playerName = player.displayName();
+            Component message;
             if (homeSlots > 0) {
                 String slotText = homeSlots == 1 ? "home slot" : "home slots";
                 String hourText = hours == 1 ? "hour" : "hours";
-                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime and received +" + homeSlots + " " + slotText + ".";
+                message = playerName
+                    .append(Component.text(" has reached ", NamedTextColor.YELLOW))
+                    .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
+                    .append(Component.text(" of playtime and received ", NamedTextColor.YELLOW))
+                    .append(Component.text("+" + homeSlots + " " + slotText + ".", NamedTextColor.AQUA));
             } else {
                 String hourText = hours == 1 ? "hour" : "hours";
-                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
+                message = playerName
+                    .append(Component.text(" has reached ", NamedTextColor.YELLOW))
+                    .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
+                    .append(Component.text(" of playtime.", NamedTextColor.YELLOW));
             }
 
-            sendDiscordMessage("Playtime Milestone", discordMessage, Color.GREEN);
-        }
+            Bukkit.getServer().broadcast(message);
+
+            if (plugin.isDiscordRelayEnabled()) {
+                String discordMessage;
+                if (homeSlots > 0) {
+                    String slotText = homeSlots == 1 ? "home slot" : "home slots";
+                    String hourText = hours == 1 ? "hour" : "hours";
+                    discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime and received +" + homeSlots + " " + slotText + ".";
+                } else {
+                    String hourText = hours == 1 ? "hour" : "hours";
+                    discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
+                }
+
+                sendDiscordMessage("Playtime Milestone", discordMessage, Color.GREEN);
+            }
+        }, 30L); // 30 ticks = 1.5 seconds delay
     }
 
     private void sendKillAnnouncement(Player player, int kills, int hearts) {
