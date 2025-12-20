@@ -19,9 +19,12 @@ public class PlayerStats {
     private final int kills;
     private final int deaths;
     private final int chatMessages;
+    private final int positiveRep;
+    private final int negativeRep;
 
     public PlayerStats(UUID uuid, String username, String firstSeen, String lastSeen, 
-                      long timePlayed, long sessionStart, int kills, int deaths, int chatMessages) {
+                      long timePlayed, long sessionStart, int kills, int deaths, int chatMessages,
+                      int positiveRep, int negativeRep) {
         this.uuid = uuid;
         this.username = username;
         this.firstSeen = firstSeen;
@@ -31,6 +34,8 @@ public class PlayerStats {
         this.kills = kills;
         this.deaths = deaths;
         this.chatMessages = chatMessages;
+        this.positiveRep = positiveRep;
+        this.negativeRep = negativeRep;
     }
 
     public UUID getUuid() { return uuid; }
@@ -42,6 +47,10 @@ public class PlayerStats {
     public int getKills() { return kills; }
     public int getDeaths() { return deaths; }
     public int getChatMessages() { return chatMessages; }
+    public int getPositiveRep() { return positiveRep; }
+    public int getNegativeRep() { return negativeRep; }
+    public int getTotalRep() { return positiveRep + negativeRep; }
+    public int getNetRep() { return positiveRep - negativeRep; }
 
     public boolean isOnline() {
         return sessionStart > 0;

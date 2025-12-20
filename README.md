@@ -1,9 +1,10 @@
 # OfflineStats Plugin
-A comprehensive player statistics tracking plugin for Minecraft 1.21.10 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
+A comprehensive player statistics tracking plugin for Minecraft 1.21.11 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
 
 ## Features
-- **Player Statistics Tracking**: Time played, first seen, last seen, kills, deaths, and chat messages
-- **Milestone Rewards**: Configurable rewards for reaching playtime, kill, and death milestones
+- **Player Statistics Tracking**: Time played, first seen, last seen, kills, deaths, chat messages, and reputation
+- **Reputation System**: Players can give positive or negative reputation to others
+- **Milestone Rewards**: Configurable rewards for reaching playtime, kill, death, and reputation milestones
 - **Multi-Plugin Integration**: Works with SimpleHome, SimpleLifesteal, SimpleVote, DiscordRelay, and ChromaTag
 - **Developer API**: Full API access for other plugins
 - **Announcements**: In-game and Discord milestone announcements
@@ -17,7 +18,10 @@ A comprehensive player statistics tracking plugin for Minecraft 1.21.10 servers.
 | `/kills [player]` | `offlinestats.kills` | Show total kills |
 | `/deaths [player]` | `offlinestats.deaths` | Show total deaths |
 | `/chatter [player]` | `offlinestats.chatter` | Show total chat messages |
-| `/leaderboard [category]` | `offlinestats.leaderboard` | Show top 10 leaderboard in a given category (aliases: `/lb`, `/top`) |
+| `/reputation [player]` | `offlinestats.reputation` | Show reputation (alias: `/rep`) |
+| `/goodrep <player>` | `offlinestats.goodrep` | Give positive reputation to a player |
+| `/badrep <player>` | `offlinestats.badrep` | Give negative reputation to a player |
+| `/leaderboard [category]` | `offlinestats.leaderboard` | Show top 10 leaderboard (aliases: `/lb`, `/top`) |
 | `/offlinestats reload` | `offlinestats.admin` | Reload plugin configuration |
 
 ### Leaderboard Categories
@@ -25,6 +29,8 @@ A comprehensive player statistics tracking plugin for Minecraft 1.21.10 servers.
 - `kills` - Top players by kills
 - `deaths` - Top players by deaths
 - `chatter` - Top players by chat messages
+- `loved` - Top Players by highest positive reputation
+- `hated` - Top Players by highest negative reputation
 
 ## API
 
@@ -74,6 +80,9 @@ if (stats != null) {
     int kills = stats.getKills();
     int deaths = stats.getDeaths();
     int chatMessages = stats.getChatMessages();
+    int positiveRep = stats.getPositiveRep();
+    int negativeRep = stats.getNegativeRep();
+    int netRep = stats.getNetRep();
     boolean isOnline = stats.isOnline();
 }
 
@@ -137,6 +146,9 @@ public class PlayerStats {
     public int getKills()
     public int getDeaths()
     public int getChatMessages()
+    public int getPositiveRep()
+    public int getNegativeRep()
+    public int getNetRep()          // positive - negative
     public boolean isOnline()
     
     // Formatted strings

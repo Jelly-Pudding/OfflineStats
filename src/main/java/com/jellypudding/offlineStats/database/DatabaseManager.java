@@ -49,7 +49,9 @@ public class DatabaseManager {
                 session_start BIGINT DEFAULT 0,
                 kills INTEGER DEFAULT 0,
                 deaths INTEGER DEFAULT 0,
-                chat_messages INTEGER DEFAULT 0
+                chat_messages INTEGER DEFAULT 0,
+                positive_rep INTEGER DEFAULT 0,
+                negative_rep INTEGER DEFAULT 0
             );
         """;
 
@@ -63,11 +65,46 @@ public class DatabaseManager {
             );
         """;
 
+        String createRepCooldownsTable = """
+            CREATE TABLE IF NOT EXISTS reputation_cooldowns (
+                giver_uuid TEXT NOT NULL,
+                receiver_uuid TEXT NOT NULL,
+                rep_type TEXT NOT NULL,
+                last_rep_time BIGINT NOT NULL,
+                PRIMARY KEY (giver_uuid, receiver_uuid)
+            );
+        """;
+
         try (PreparedStatement stmt1 = connection.prepareStatement(createPlayersTable);
-             PreparedStatement stmt2 = connection.prepareStatement(createMilestonesTable)) {
+             PreparedStatement stmt2 = connection.prepareStatement(createMilestonesTable);
+             PreparedStatement stmt3 = connection.prepareStatement(createRepCooldownsTable)) {
 
             stmt1.executeUpdate();
             stmt2.executeUpdate();
+            stmt3.executeUpdate();
+        }
+
+        // New feature so need to add if it's not present in db...
+        addColumnIfNotExists("players", "positive_rep", "INTEGER DEFAULT 0");
+        addColumnIfNotExists("players", "negative_rep", "INTEGER DEFAULT 0");
+    }
+
+    private void addColumnIfNotExists(String table, String column, String type) {
+        try {
+            String checkQuery = "SELECT " + column + " FROM " + table + " LIMIT 1";
+            try (PreparedStatement stmt = connection.prepareStatement(checkQuery)) {
+                stmt.executeQuery();
+            }
+        } catch (SQLException e) {
+            try {
+                String alterQuery = "ALTER TABLE " + table + " ADD COLUMN " + column + " " + type;
+                try (PreparedStatement stmt = connection.prepareStatement(alterQuery)) {
+                    stmt.executeUpdate();
+                    plugin.getLogger().info("Added column " + column + " to " + table + " table");
+                }
+            } catch (SQLException ex) {
+                plugin.getLogger().warning("Failed to add column " + column + " to " + table + ": " + ex.getMessage());
+            }
         }
     }
 
@@ -199,13 +236,149 @@ public class DatabaseManager {
                     rs.getLong("session_start"),
                     rs.getInt("kills"),
                     rs.getInt("deaths"),
-                    rs.getInt("chat_messages")
+                    rs.getInt("chat_messages"),
+                    rs.getInt("positive_rep"),
+                    rs.getInt("negative_rep")
                 );
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Error getting player stats for " + playerUuid, e);
         }
         return null;
+    }
+
+    public String getExistingRepType(UUID giverUuid, UUID receiverUuid) {
+        String query = "SELECT rep_type FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, giverUuid.toString());
+            stmt.setString(2, receiverUuid.toString());
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getString("rep_type");
+            }
+            return null;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error getting existing rep type", e);
+            return null;
+        }
+    }
+
+    public void giveReputation(UUID giverUuid, UUID receiverUuid, boolean positive) {
+        String existingType = getExistingRepType(giverUuid, receiverUuid);
+
+        if (existingType != null) {
+            if (existingType.equals("positive")) {
+                decrementPositiveRep(receiverUuid);
+            } else {
+                decrementNegativeRep(receiverUuid);
+            }
+        }
+
+        if (positive) {
+            incrementPositiveRep(receiverUuid);
+        } else {
+            incrementNegativeRep(receiverUuid);
+        }
+        updateRepRecord(giverUuid, receiverUuid, positive ? "positive" : "negative");
+    }
+
+    private void incrementPositiveRep(UUID playerUuid) {
+        String query = "UPDATE players SET positive_rep = positive_rep + 1 WHERE uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error incrementing positive rep for " + playerUuid, e);
+        }
+    }
+
+    private void decrementPositiveRep(UUID playerUuid) {
+        String query = "UPDATE players SET positive_rep = MAX(0, positive_rep - 1) WHERE uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error decrementing positive rep for " + playerUuid, e);
+        }
+    }
+
+    private void incrementNegativeRep(UUID playerUuid) {
+        String query = "UPDATE players SET negative_rep = negative_rep + 1 WHERE uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error incrementing negative rep for " + playerUuid, e);
+        }
+    }
+
+    private void decrementNegativeRep(UUID playerUuid) {
+        String query = "UPDATE players SET negative_rep = MAX(0, negative_rep - 1) WHERE uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, playerUuid.toString());
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error decrementing negative rep for " + playerUuid, e);
+        }
+    }
+
+    public boolean canGiveReputation(UUID giverUuid, UUID receiverUuid) {
+        String query = "SELECT last_rep_time FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, giverUuid.toString());
+            stmt.setString(2, receiverUuid.toString());
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                long lastRepTime = rs.getLong("last_rep_time");
+                long twentyFourHoursMs = 24 * 60 * 60 * 1000L;
+                return (System.currentTimeMillis() - lastRepTime) >= twentyFourHoursMs;
+            }
+            return true;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error checking reputation cooldown", e);
+            return false;
+        }
+    }
+
+    public long getRepCooldownRemaining(UUID giverUuid, UUID receiverUuid) {
+        String query = "SELECT last_rep_time FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setString(1, giverUuid.toString());
+            stmt.setString(2, receiverUuid.toString());
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                long lastRepTime = rs.getLong("last_rep_time");
+                long twentyFourHoursMs = 24 * 60 * 60 * 1000L;
+                long remaining = twentyFourHoursMs - (System.currentTimeMillis() - lastRepTime);
+                return Math.max(0, remaining);
+            }
+            return 0;
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error getting reputation cooldown remaining", e);
+            return 0;
+        }
+    }
+
+    private void updateRepRecord(UUID giverUuid, UUID receiverUuid, String repType) {
+        String query = """
+            INSERT INTO reputation_cooldowns (giver_uuid, receiver_uuid, rep_type, last_rep_time) 
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(giver_uuid, receiver_uuid) DO UPDATE SET rep_type = ?, last_rep_time = ?
+        """;
+        try (PreparedStatement stmt = connection.prepareStatement(query)) {
+            long now = System.currentTimeMillis();
+            stmt.setString(1, giverUuid.toString());
+            stmt.setString(2, receiverUuid.toString());
+            stmt.setString(3, repType);
+            stmt.setLong(4, now);
+            stmt.setString(5, repType);
+            stmt.setLong(6, now);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Error updating reputation record", e);
+        }
     }
 
     public boolean hasMilestone(UUID playerUuid, String milestoneType, int milestoneValue) {
@@ -279,7 +452,9 @@ public class DatabaseManager {
                     rs.getLong("session_start"),
                     rs.getInt("kills"),
                     rs.getInt("deaths"),
-                    rs.getInt("chat_messages")
+                    rs.getInt("chat_messages"),
+                    rs.getInt("positive_rep"),
+                    rs.getInt("negative_rep")
                 ));
             }
         } catch (SQLException e) {
@@ -303,6 +478,16 @@ public class DatabaseManager {
         return executeLeaderboardQuery(query, limit);
     }
 
+    public java.util.List<PlayerStats> getTopPlayersByPositiveRep(int limit) {
+        String query = "SELECT * FROM players ORDER BY (positive_rep - negative_rep) DESC LIMIT ?";
+        return executeLeaderboardQuery(query, limit);
+    }
+
+    public java.util.List<PlayerStats> getTopPlayersByNegativeRep(int limit) {
+        String query = "SELECT * FROM players ORDER BY (positive_rep - negative_rep) ASC LIMIT ?";
+        return executeLeaderboardQuery(query, limit);
+    }
+
     private java.util.List<PlayerStats> executeLeaderboardQuery(String query, int limit) {
         java.util.List<PlayerStats> results = new java.util.ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
@@ -319,7 +504,9 @@ public class DatabaseManager {
                     rs.getLong("session_start"),
                     rs.getInt("kills"),
                     rs.getInt("deaths"),
-                    rs.getInt("chat_messages")
+                    rs.getInt("chat_messages"),
+                    rs.getInt("positive_rep"),
+                    rs.getInt("negative_rep")
                 ));
             }
         } catch (SQLException e) {

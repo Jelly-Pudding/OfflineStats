@@ -266,19 +266,16 @@ public class MilestoneManager {
 
             Bukkit.getServer().broadcast(message);
 
-            if (plugin.isDiscordRelayEnabled()) {
-                String discordMessage;
-                if (homeSlots > 0) {
-                    String slotText = homeSlots == 1 ? "home slot" : "home slots";
-                    String hourText = hours == 1 ? "hour" : "hours";
-                    discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime and received +" + homeSlots + " " + slotText + ".";
-                } else {
-                    String hourText = hours == 1 ? "hour" : "hours";
-                    discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
-                }
-
-                sendDiscordMessage("Playtime Milestone", discordMessage, Color.GREEN);
+            String discordMessage;
+            if (homeSlots > 0) {
+                String slotText = homeSlots == 1 ? "home slot" : "home slots";
+                String hourText = hours == 1 ? "hour" : "hours";
+                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime and received +" + homeSlots + " " + slotText + ".";
+            } else {
+                String hourText = hours == 1 ? "hour" : "hours";
+                discordMessage = player.getName() + " has reached " + hours + " " + hourText + " of playtime.";
             }
+            plugin.getDiscordUtil().sendMessage("Playtime Milestone", discordMessage, Color.GREEN);
         }, 30L); // 30 ticks = 1.5 seconds delay
     }
 
@@ -294,10 +291,8 @@ public class MilestoneManager {
 
         Bukkit.getServer().broadcast(message);
 
-        if (plugin.isDiscordRelayEnabled()) {
-            String discordMessage = player.getName() + " has reached " + kills + " " + killText + " and received +" + hearts + " " + heartText + ".";
-            sendDiscordMessage("Kill Milestone", discordMessage, Color.RED);
-        }
+        String discordMessage = player.getName() + " has reached " + kills + " " + killText + " and received +" + hearts + " " + heartText + ".";
+        plugin.getDiscordUtil().sendMessage("Kill Milestone", discordMessage, Color.RED);
     }
 
     private void sendDeathAnnouncement(Player player, int deaths, int tokens) {
@@ -312,23 +307,82 @@ public class MilestoneManager {
 
         Bukkit.getServer().broadcast(message);
 
-        if (plugin.isDiscordRelayEnabled()) {
-            String discordMessage = player.getName() + " has died " + deaths + " " + timeText + " and received " + tokens + " " + tokenText + " for their trouble.";
-            sendDiscordMessage("Death Milestone", discordMessage, Color.BLACK);
+        String discordMessage = player.getName() + " has died " + deaths + " " + timeText + " and received " + tokens + " " + tokenText + " for their trouble.";
+        plugin.getDiscordUtil().sendMessage("Death Milestone", discordMessage, Color.BLACK);
+    }
+
+    public void checkReputationMilestones(Player player) {
+        if (!plugin.getConfig().getBoolean("milestones.reputation.enabled", true)) {
+            return;
+        }
+
+        PlayerStats stats = plugin.getDatabaseManager().getPlayerStats(player.getUniqueId());
+        if (stats == null) return;
+
+        int absNetRep = Math.abs(stats.getNetRep());
+        ConfigurationSection rewards = plugin.getConfig().getConfigurationSection("milestones.reputation.rewards");
+
+        if (rewards == null) return;
+
+        for (String key : rewards.getKeys(false)) {
+            try {
+                int milestone = Integer.parseInt(key);
+                if (absNetRep >= milestone && !plugin.getDatabaseManager().hasMilestone(player.getUniqueId(), "reputation", milestone)) {
+                    awardReputationMilestone(player, milestone, stats.getNetRep());
+                }
+            } catch (NumberFormatException e) {
+                plugin.getLogger().warning("Invalid milestone key in reputation rewards: " + key);
+            }
         }
     }
 
-    private void sendDiscordMessage(String title, String message, Color color) {
+    private void awardReputationMilestone(Player player, int milestone, int netRep) {
         try {
-            Class<?> discordRelayAPI = Class.forName("com.jellypudding.discordRelay.DiscordRelayAPI");
-            java.lang.reflect.Method isReady = discordRelayAPI.getMethod("isReady");
-            java.lang.reflect.Method sendFormattedMessage = discordRelayAPI.getMethod("sendFormattedMessage", String.class, String.class, Color.class);
-
-            if ((Boolean) isReady.invoke(null)) {
-                sendFormattedMessage.invoke(null, title, message, color);
+            if (plugin.isSimpleVoteEnabled()) {
+                int tokens = plugin.getConfig().getInt("milestones.reputation.rewards." + milestone + ".tokens", 10);
+                try {
+                    org.bukkit.plugin.Plugin simpleVotePlugin = Bukkit.getPluginManager().getPlugin("SimpleVote");
+                    if (simpleVotePlugin != null && simpleVotePlugin.isEnabled()) {
+                        java.lang.reflect.Method getTokenManager = simpleVotePlugin.getClass().getMethod("getTokenManager");
+                        Object tokenManager = getTokenManager.invoke(simpleVotePlugin);
+                        java.lang.reflect.Method addTokens = tokenManager.getClass().getMethod("addTokens", UUID.class, int.class);
+                        addTokens.invoke(tokenManager, player.getUniqueId(), tokens);
+                        plugin.getLogger().info("Awarded " + tokens + " tokens to " + player.getName() + " for reaching " + milestone + " reputation milestone");
+                    }
+                } catch (Exception e) {
+                    plugin.getLogger().warning("Failed to award tokens: " + e.getMessage());
+                }
             }
+
+            plugin.getDatabaseManager().addMilestone(player.getUniqueId(), "reputation", milestone);
+
+            sendReputationAnnouncement(player, netRep, plugin.getConfig().getInt("milestones.reputation.rewards." + milestone + ".tokens", 10));
+
         } catch (Exception e) {
-            plugin.getLogger().warning("Failed to send Discord announcement: " + e.getMessage());
+            plugin.getLogger().log(Level.SEVERE, "Error awarding reputation milestone to " + player.getName(), e);
         }
+    }
+
+    private void sendReputationAnnouncement(Player player, int netRep, int tokens) {
+        String tokenText = tokens == 1 ? "token" : "tokens";
+        String repDisplay;
+        if (netRep > 0) {
+            repDisplay = "+" + netRep;
+        } else if (netRep < 0) {
+            repDisplay = "-" + Math.abs(netRep);
+        } else {
+            repDisplay = "0";
+        }
+        Component playerName = player.displayName();
+        Component message = playerName
+            .append(Component.text(" has reached ", NamedTextColor.YELLOW))
+            .append(Component.text(repDisplay + " reputation", netRep > 0 ? NamedTextColor.GREEN : (netRep < 0 ? NamedTextColor.RED : NamedTextColor.WHITE)))
+            .append(Component.text(" and received ", NamedTextColor.YELLOW))
+            .append(Component.text(tokens + " " + tokenText + ".", NamedTextColor.GOLD));
+
+        Bukkit.getServer().broadcast(message);
+
+        String discordMessage = player.getName() + " has reached " + repDisplay + " reputation and received " + tokens + " " + tokenText + ".";
+        plugin.getDiscordUtil().sendMessage("Reputation Milestone", discordMessage, netRep >= 0 ? Color.GREEN : Color.RED);
     }
 }

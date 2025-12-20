@@ -71,6 +71,26 @@ milestones:
       100000:
         tokens: 10000
 
+  reputation:
+    enabled: true
+    rewards:
+      10:
+        tokens: 10
+      50:
+        tokens: 25
+      100:
+        tokens: 50
+      500:
+        tokens: 250
+      1000:
+        tokens: 500
+      2000:
+        tokens: 1000
+      5000:
+        tokens: 2000
+      10000:
+        tokens: 3000
+
 anti-farming:
   # Time window in minutes to check for farming behaviour.
   time-window-minutes: 10

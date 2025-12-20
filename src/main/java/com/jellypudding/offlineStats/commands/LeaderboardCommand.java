@@ -38,7 +38,7 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
         }
 
         if (!isValidCategory(category)) {
-            sender.sendMessage(Component.text("Invalid category! Valid categories: timeplayed, kills, deaths, chatter", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Invalid category! Valid categories: timeplayed, kills, deaths, chatter, loved, hated", NamedTextColor.RED));
             return true;
         }
 
@@ -54,7 +54,7 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
     }
 
     private boolean isValidCategory(String category) {
-        return Arrays.asList("timeplayed", "kills", "deaths", "chatter").contains(category);
+        return Arrays.asList("timeplayed", "kills", "deaths", "chatter", "loved", "hated").contains(category);
     }
 
     private List<PlayerStats> getLeaderboardData(String category) {
@@ -67,6 +67,10 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
                 return plugin.getDatabaseManager().getTopPlayersByDeaths(TOP_PLAYERS);
             case "chatter":
                 return plugin.getDatabaseManager().getTopPlayersByChatMessages(TOP_PLAYERS);
+            case "loved":
+                return plugin.getDatabaseManager().getTopPlayersByPositiveRep(TOP_PLAYERS);
+            case "hated":
+                return plugin.getDatabaseManager().getTopPlayersByNegativeRep(TOP_PLAYERS);
             default:
                 return List.of();
         }
@@ -110,6 +114,8 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
             case "kills": return "Kills";
             case "deaths": return "Deaths";
             case "chatter": return "Chat Messages";
+            case "loved": return "Highest Positive Reputation";
+            case "hated": return "Highest Negative Reputation";
             default: return category;
         }
     }
@@ -127,6 +133,17 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
             case "chatter":
                 String messageText = stats.getChatMessages() == 1 ? "message" : "messages";
                 return Component.text(stats.getChatMessages() + " " + messageText, NamedTextColor.AQUA);
+            case "loved":
+            case "hated":
+                int netRep = stats.getNetRep();
+                NamedTextColor netColor = netRep > 0 ? NamedTextColor.GREEN : (netRep < 0 ? NamedTextColor.RED : NamedTextColor.WHITE);
+                String netDisplay = netRep > 0 ? "+" + netRep : (netRep < 0 ? "-" + Math.abs(netRep) : "0");
+                return Component.text(netDisplay, netColor)
+                    .append(Component.text(" (", NamedTextColor.GRAY))
+                    .append(Component.text("+" + stats.getPositiveRep(), NamedTextColor.GREEN))
+                    .append(Component.text("/", NamedTextColor.GRAY))
+                    .append(Component.text("-" + stats.getNegativeRep(), NamedTextColor.RED))
+                    .append(Component.text(")", NamedTextColor.GRAY));
             default:
                 return Component.text("Unknown", NamedTextColor.GRAY);
         }
@@ -135,7 +152,7 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("timeplayed", "kills", "deaths", "chatter")
+            return Arrays.asList("timeplayed", "kills", "deaths", "chatter", "loved", "hated")
                 .stream()
                 .filter(category -> category.toLowerCase().startsWith(args[0].toLowerCase()))
                 .collect(Collectors.toList());

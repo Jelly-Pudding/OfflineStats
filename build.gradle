@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'com.jellypudding'
-version = '1.1'
+version = '1.2'
 
 repositories {
     mavenCentral()
@@ -18,12 +18,12 @@ repositories {
 }
 
 dependencies {
-    compileOnly("io.papermc.paper:paper-api:1.21.10-R0.1-SNAPSHOT")
-    compileOnly files('libs/SimpleHome-1.0.7.jar')
-    compileOnly files('libs/SimpleLifesteal-1.7.jar')
-    compileOnly files('libs/SimpleVote-2.4.jar')
-    compileOnly files('libs/BasicDiscordRelay-1.1.6.jar')
-    compileOnly files('libs/ChromaTag-1.2.5.jar')
+    compileOnly("io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT")
+    compileOnly files('libs/SimpleHome-1.0.8.jar')
+    compileOnly files('libs/SimpleLifesteal-1.8.jar')
+    compileOnly files('libs/SimpleVote-2.5.jar')
+    compileOnly files('libs/BasicDiscordRelay-1.1.8.jar')
+    compileOnly files('libs/ChromaTag-1.2.6.jar')
 }
 
 def targetJavaVersion = 21

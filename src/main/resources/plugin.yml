@@ -1,5 +1,5 @@
 name: OfflineStats
-version: '1.1'
+version: '1.2'
 main: com.jellypudding.offlineStats.OfflineStats
 api-version: '1.21'
 description: "Plugin for MinecraftOffline.net that keeps track of player stats and provides awards on milestones."
@@ -34,6 +34,19 @@ commands:
     description: Check how many chat messages a player has sent
     usage: /<command> [player]
     permission: offlinestats.chatter
+  goodrep:
+    description: Give positive reputation to a player
+    usage: /<command> <player>
+    permission: offlinestats.goodrep
+  badrep:
+    description: Give negative reputation to a player
+    usage: /<command> <player>
+    permission: offlinestats.badrep
+  reputation:
+    description: Check a player's reputation
+    usage: /<command> [player]
+    permission: offlinestats.reputation
+    aliases: [rep]
   leaderboard:
     description: View server leaderboards for different stats
     usage: /<command> [category]
@@ -63,6 +76,15 @@ permissions:
     default: true
   offlinestats.chatter:
     description: Permission to use /chatter command
+    default: true
+  offlinestats.goodrep:
+    description: Permission to use /goodrep command
+    default: true
+  offlinestats.badrep:
+    description: Permission to use /badrep command
+    default: true
+  offlinestats.reputation:
+    description: Permission to use /reputation command
     default: true
   offlinestats.leaderboard:
     description: Permission to use /leaderboard command

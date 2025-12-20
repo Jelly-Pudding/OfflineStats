@@ -7,6 +7,7 @@ import com.jellypudding.offlineStats.database.DatabaseManager;
 import com.jellypudding.offlineStats.listeners.PlayerStatsListener;
 import com.jellypudding.offlineStats.milestones.MilestoneManager;
 import com.jellypudding.offlineStats.utils.AntiFarmingManager;
+import com.jellypudding.offlineStats.utils.DiscordUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -19,6 +20,7 @@ public final class OfflineStats extends JavaPlugin {
     private MilestoneManager milestoneManager;
     private OfflineStatsAPI api;
     private AntiFarmingManager antiFarmingManager;
+    private DiscordUtil discordUtil;
     private BukkitTask cleanupTask;
 
     // Plugin integrations
@@ -45,6 +47,9 @@ public final class OfflineStats extends JavaPlugin {
 
         // Initialise anti-farming manager
         antiFarmingManager = new AntiFarmingManager(this);
+
+        // Initialise Discord utility
+        discordUtil = new DiscordUtil(this);
 
         // Start cleanup task for anti-farming data (runs every 5 minutes)
         cleanupTask = Bukkit.getScheduler().runTaskTimerAsynchronously(this, 
@@ -147,6 +152,9 @@ public final class OfflineStats extends JavaPlugin {
         getCommand("deaths").setExecutor(new DeathsCommand(this));
         getCommand("chatter").setExecutor(new ChatterCommand(this));
         getCommand("offlinestats").setExecutor(new OfflineStatsCommand(this));
+        getCommand("goodrep").setExecutor(new GoodRepCommand(this));
+        getCommand("badrep").setExecutor(new BadRepCommand(this));
+        getCommand("reputation").setExecutor(new ReputationCommand(this));
 
         LeaderboardCommand leaderboardCommand = new LeaderboardCommand(this);
         getCommand("leaderboard").setExecutor(leaderboardCommand);
@@ -187,5 +195,9 @@ public final class OfflineStats extends JavaPlugin {
 
     public boolean isChromaTagEnabled() {
         return chromaTagEnabled;
+    }
+
+    public DiscordUtil getDiscordUtil() {
+        return discordUtil;
     }
 }
