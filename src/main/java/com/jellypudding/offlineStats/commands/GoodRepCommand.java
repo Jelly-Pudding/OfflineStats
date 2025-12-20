@@ -77,9 +77,10 @@ public class GoodRepCommand implements CommandExecutor {
 
         plugin.getDatabaseManager().giveReputation(giver.getUniqueId(), targetUuid, true);
 
-        PlayerStats updatedStats = plugin.getDatabaseManager().getPlayerStats(targetUuid);
-
-        Component targetDisplayName = PlayerUtil.getPlayerDisplayName(targetStats.getUsername(), targetUuid);
+        Player targetPlayer = Bukkit.getPlayer(targetUuid);
+        Component targetDisplayName = targetPlayer != null 
+            ? targetPlayer.displayName() 
+            : PlayerUtil.getPlayerDisplayName(targetStats.getUsername(), targetUuid);
         Component giverDisplayName = giver.displayName();
         
         Component message = giverDisplayName
@@ -92,12 +93,7 @@ public class GoodRepCommand implements CommandExecutor {
         String discordMessage = giver.getName() + " gave positive reputation to " + targetStats.getUsername() + ".";
         plugin.getDiscordUtil().sendMessage("Reputation", discordMessage, Color.GREEN);
 
-        if (updatedStats != null) {
-            Player targetPlayer = Bukkit.getPlayer(targetUuid);
-            if (targetPlayer != null) {
-                plugin.getMilestoneManager().checkReputationMilestones(targetPlayer);
-            }
-        }
+        plugin.getMilestoneManager().checkReputationMilestones(targetUuid);
 
         return true;
     }

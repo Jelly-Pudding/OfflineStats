@@ -312,11 +312,15 @@ public class MilestoneManager {
     }
 
     public void checkReputationMilestones(Player player) {
+        checkReputationMilestones(player.getUniqueId());
+    }
+
+    public void checkReputationMilestones(UUID playerUuid) {
         if (!plugin.getConfig().getBoolean("milestones.reputation.enabled", true)) {
             return;
         }
 
-        PlayerStats stats = plugin.getDatabaseManager().getPlayerStats(player.getUniqueId());
+        PlayerStats stats = plugin.getDatabaseManager().getPlayerStats(playerUuid);
         if (stats == null) return;
 
         int absNetRep = Math.abs(stats.getNetRep());
@@ -327,8 +331,8 @@ public class MilestoneManager {
         for (String key : rewards.getKeys(false)) {
             try {
                 int milestone = Integer.parseInt(key);
-                if (absNetRep >= milestone && !plugin.getDatabaseManager().hasMilestone(player.getUniqueId(), "reputation", milestone)) {
-                    awardReputationMilestone(player, milestone, stats.getNetRep());
+                if (absNetRep >= milestone && !plugin.getDatabaseManager().hasMilestone(playerUuid, "reputation", milestone)) {
+                    awardReputationMilestone(playerUuid, stats.getUsername(), milestone, stats.getNetRep());
                 }
             } catch (NumberFormatException e) {
                 plugin.getLogger().warning("Invalid milestone key in reputation rewards: " + key);
@@ -336,7 +340,7 @@ public class MilestoneManager {
         }
     }
 
-    private void awardReputationMilestone(Player player, int milestone, int netRep) {
+    private void awardReputationMilestone(UUID playerUuid, String playerName, int milestone, int netRep) {
         try {
             if (plugin.isSimpleVoteEnabled()) {
                 int tokens = plugin.getConfig().getInt("milestones.reputation.rewards." + milestone + ".tokens", 10);
@@ -346,24 +350,24 @@ public class MilestoneManager {
                         java.lang.reflect.Method getTokenManager = simpleVotePlugin.getClass().getMethod("getTokenManager");
                         Object tokenManager = getTokenManager.invoke(simpleVotePlugin);
                         java.lang.reflect.Method addTokens = tokenManager.getClass().getMethod("addTokens", UUID.class, int.class);
-                        addTokens.invoke(tokenManager, player.getUniqueId(), tokens);
-                        plugin.getLogger().info("Awarded " + tokens + " tokens to " + player.getName() + " for reaching " + milestone + " reputation milestone");
+                        addTokens.invoke(tokenManager, playerUuid, tokens);
+                        plugin.getLogger().info("Awarded " + tokens + " tokens to " + playerName + " for reaching " + milestone + " reputation milestone");
                     }
                 } catch (Exception e) {
                     plugin.getLogger().warning("Failed to award tokens: " + e.getMessage());
                 }
             }
 
-            plugin.getDatabaseManager().addMilestone(player.getUniqueId(), "reputation", milestone);
+            plugin.getDatabaseManager().addMilestone(playerUuid, "reputation", milestone);
 
-            sendReputationAnnouncement(player, netRep, plugin.getConfig().getInt("milestones.reputation.rewards." + milestone + ".tokens", 10));
+            sendReputationAnnouncement(playerUuid, playerName, netRep, plugin.getConfig().getInt("milestones.reputation.rewards." + milestone + ".tokens", 10));
 
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Error awarding reputation milestone to " + player.getName(), e);
+            plugin.getLogger().log(Level.SEVERE, "Error awarding reputation milestone to " + playerName, e);
         }
     }
 
-    private void sendReputationAnnouncement(Player player, int netRep, int tokens) {
+    private void sendReputationAnnouncement(UUID playerUuid, String playerName, int netRep, int tokens) {
         String tokenText = tokens == 1 ? "token" : "tokens";
         String repDisplay;
         if (netRep > 0) {
@@ -373,8 +377,13 @@ public class MilestoneManager {
         } else {
             repDisplay = "0";
         }
-        Component playerName = player.displayName();
-        Component message = playerName
+
+        Player onlinePlayer = Bukkit.getPlayer(playerUuid);
+        Component playerDisplayName = onlinePlayer != null 
+            ? onlinePlayer.displayName() 
+            : com.jellypudding.offlineStats.utils.PlayerUtil.getPlayerDisplayName(playerName, playerUuid);
+
+        Component message = playerDisplayName
             .append(Component.text(" has reached ", NamedTextColor.YELLOW))
             .append(Component.text(repDisplay + " reputation", netRep > 0 ? NamedTextColor.GREEN : (netRep < 0 ? NamedTextColor.RED : NamedTextColor.WHITE)))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
@@ -382,7 +391,7 @@ public class MilestoneManager {
 
         Bukkit.getServer().broadcast(message);
 
-        String discordMessage = player.getName() + " has reached " + repDisplay + " reputation and received " + tokens + " " + tokenText + ".";
+        String discordMessage = playerName + " has reached " + repDisplay + " reputation and received " + tokens + " " + tokenText + ".";
         plugin.getDiscordUtil().sendMessage("Reputation Milestone", discordMessage, netRep >= 0 ? Color.GREEN : Color.RED);
     }
 }
