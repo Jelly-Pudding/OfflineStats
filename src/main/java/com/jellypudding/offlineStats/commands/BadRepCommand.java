@@ -83,7 +83,8 @@ public class BadRepCommand implements CommandExecutor {
             : PlayerUtil.getPlayerDisplayName(targetStats.getUsername(), targetUuid);
         Component giverDisplayName = giver.displayName();
 
-        Component message = giverDisplayName
+        Component message = Component.empty()
+            .append(giverDisplayName)
             .append(Component.text(" gave negative reputation to ", NamedTextColor.RED))
             .append(targetDisplayName)
             .append(Component.text(".", NamedTextColor.RED));

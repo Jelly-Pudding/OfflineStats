@@ -83,7 +83,8 @@ public class GoodRepCommand implements CommandExecutor {
             : PlayerUtil.getPlayerDisplayName(targetStats.getUsername(), targetUuid);
         Component giverDisplayName = giver.displayName();
         
-        Component message = giverDisplayName
+        Component message = Component.empty()
+            .append(giverDisplayName)
             .append(Component.text(" gave positive reputation to ", NamedTextColor.GREEN))
             .append(targetDisplayName)
             .append(Component.text(".", NamedTextColor.GREEN));
