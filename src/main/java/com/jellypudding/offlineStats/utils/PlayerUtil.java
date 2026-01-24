@@ -73,6 +73,6 @@ public class PlayerUtil {
             }
         }
         // Fallback.
-        return Component.text(playerName, NamedTextColor.GOLD);
+        return Component.text(playerName, NamedTextColor.WHITE);
     }
 }

@@ -114,8 +114,8 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
             case "kills": return "Kills";
             case "deaths": return "Deaths";
             case "chatter": return "Chat Messages";
-            case "loved": return "Highest Positive Reputation";
-            case "hated": return "Highest Negative Reputation";
+            case "loved": return "Highest Reputation";
+            case "hated": return "Lowest Reputation";
             default: return category;
         }
     }
