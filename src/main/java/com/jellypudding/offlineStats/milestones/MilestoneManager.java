@@ -255,7 +255,8 @@ public class MilestoneManager {
                     .append(Component.text(" has reached ", NamedTextColor.YELLOW))
                     .append(Component.text(hours + " " + hourText, NamedTextColor.GREEN))
                     .append(Component.text(" of playtime and received ", NamedTextColor.YELLOW))
-                    .append(Component.text("+" + homeSlots + " " + slotText + ".", NamedTextColor.AQUA));
+                    .append(Component.text("+" + homeSlots + " " + slotText, NamedTextColor.AQUA))
+                    .append(Component.text(".", NamedTextColor.YELLOW));
             } else {
                 String hourText = hours == 1 ? "hour" : "hours";
                 message = playerName
@@ -287,7 +288,8 @@ public class MilestoneManager {
             .append(Component.text(" has reached ", NamedTextColor.YELLOW))
             .append(Component.text(kills + " " + killText, NamedTextColor.RED))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
-            .append(Component.text("+" + hearts + " " + heartText + ".", NamedTextColor.DARK_RED));
+            .append(Component.text("+" + hearts + " " + heartText, NamedTextColor.DARK_RED))
+            .append(Component.text(".", NamedTextColor.YELLOW));
 
         Bukkit.getServer().broadcast(message);
 
@@ -303,7 +305,8 @@ public class MilestoneManager {
             .append(Component.text(" has died ", NamedTextColor.YELLOW))
             .append(Component.text(deaths + " " + timeText, NamedTextColor.RED))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
-            .append(Component.text(tokens + " " + tokenText + " for their trouble.", NamedTextColor.GOLD));
+            .append(Component.text(tokens + " " + tokenText, NamedTextColor.GOLD))
+            .append(Component.text(" for their trouble.", NamedTextColor.YELLOW));
 
         Bukkit.getServer().broadcast(message);
 
@@ -387,7 +390,8 @@ public class MilestoneManager {
             .append(Component.text(" has reached ", NamedTextColor.YELLOW))
             .append(Component.text(repDisplay + " reputation", netRep > 0 ? NamedTextColor.GREEN : (netRep < 0 ? NamedTextColor.RED : NamedTextColor.WHITE)))
             .append(Component.text(" and received ", NamedTextColor.YELLOW))
-            .append(Component.text(tokens + " " + tokenText + ".", NamedTextColor.GOLD));
+            .append(Component.text(tokens + " " + tokenText, NamedTextColor.GOLD))
+            .append(Component.text(".", NamedTextColor.YELLOW));
 
         Bukkit.getServer().broadcast(message);
 
