@@ -30,6 +30,7 @@ public class OfflineStatsCommand implements CommandExecutor {
         if (args[0].equalsIgnoreCase("reload")) {
             try {
                 plugin.reloadConfig();
+                plugin.getAntiFarmingManager().reload();
                 sender.sendMessage(Component.text("OfflineStats configuration reloaded successfully.", NamedTextColor.GREEN));
                 plugin.getLogger().info(sender.getName() + " reloaded the OfflineStats configuration.");
             } catch (Exception e) {

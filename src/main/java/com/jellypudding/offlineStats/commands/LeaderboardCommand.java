@@ -30,26 +30,24 @@ public class LeaderboardCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
-        String category = "timeplayed";
-
-        // Parse arguments
-        if (args.length >= 1) {
-            category = args[0].toLowerCase();
-        }
+        String category = args.length >= 1 ? args[0].toLowerCase() : "timeplayed";
 
         if (!isValidCategory(category)) {
             sender.sendMessage(Component.text("Invalid category! Valid categories: timeplayed, kills, deaths, chatter, loved, hated", NamedTextColor.RED));
             return true;
         }
 
-        List<PlayerStats> topPlayers = getLeaderboardData(category);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            List<PlayerStats> topPlayers = getLeaderboardData(category);
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (topPlayers.isEmpty()) {
+                    sender.sendMessage(Component.text("No players found for this category.", NamedTextColor.YELLOW));
+                    return;
+                }
+                displayLeaderboard(sender, category, topPlayers);
+            });
+        });
 
-        if (topPlayers.isEmpty()) {
-            sender.sendMessage(Component.text("No players found for this category.", NamedTextColor.YELLOW));
-            return true;
-        }
-
-        displayLeaderboard(sender, category, topPlayers);
         return true;
     }
 

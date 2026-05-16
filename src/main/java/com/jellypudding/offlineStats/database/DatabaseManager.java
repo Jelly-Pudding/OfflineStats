@@ -21,7 +21,7 @@ public class DatabaseManager {
         this.databasePath = plugin.getDataFolder() + File.separator + "offlinestats.db";
     }
 
-    public void initialise() {
+    public synchronized void initialise() {
         try {
             if (!plugin.getDataFolder().exists()) {
                 plugin.getDataFolder().mkdirs();
@@ -38,7 +38,7 @@ public class DatabaseManager {
         }
     }
 
-    private void createTables() throws SQLException {
+    private synchronized void createTables() throws SQLException {
         String createPlayersTable = """
             CREATE TABLE IF NOT EXISTS players (
                 uuid TEXT PRIMARY KEY,
@@ -89,7 +89,7 @@ public class DatabaseManager {
         addColumnIfNotExists("players", "negative_rep", "INTEGER DEFAULT 0");
     }
 
-    private void addColumnIfNotExists(String table, String column, String type) {
+    private synchronized void addColumnIfNotExists(String table, String column, String type) {
         try {
             String checkQuery = "SELECT " + column + " FROM " + table + " LIMIT 1";
             try (PreparedStatement stmt = connection.prepareStatement(checkQuery)) {
@@ -108,7 +108,15 @@ public class DatabaseManager {
         }
     }
 
-    public void close() {
+    public synchronized boolean isInitialised() {
+        try {
+            return connection != null && !connection.isClosed();
+        } catch (SQLException e) {
+            return false;
+        }
+    }
+
+    public synchronized void close() {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
@@ -119,7 +127,7 @@ public class DatabaseManager {
         }
     }
 
-    public void createOrUpdatePlayer(Player player) {
+    public synchronized void createOrUpdatePlayer(Player player) {
         String uuid = player.getUniqueId().toString();
         String username = player.getName();
         String now = getCurrentTimestamp();
@@ -158,7 +166,7 @@ public class DatabaseManager {
         }
     }
 
-    public void updatePlayerOnQuit(Player player) {
+    public synchronized void updatePlayerOnQuit(Player player) {
         String uuid = player.getUniqueId().toString();
         String now = getCurrentTimestamp();
 
@@ -180,7 +188,7 @@ public class DatabaseManager {
         }
     }
 
-    public void incrementKills(UUID playerUuid) {
+    public synchronized void incrementKills(UUID playerUuid) {
         String query = "UPDATE players SET kills = kills + 1 WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -190,7 +198,7 @@ public class DatabaseManager {
         }
     }
 
-    public void incrementDeaths(UUID playerUuid) {
+    public synchronized void incrementDeaths(UUID playerUuid) {
         String query = "UPDATE players SET deaths = deaths + 1 WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -200,7 +208,7 @@ public class DatabaseManager {
         }
     }
 
-    public void incrementChatMessages(UUID playerUuid) {
+    public synchronized void incrementChatMessages(UUID playerUuid) {
         String query = "UPDATE players SET chat_messages = chat_messages + 1 WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -210,8 +218,7 @@ public class DatabaseManager {
         }
     }
 
-    // Getter methods
-    public PlayerStats getPlayerStats(String playerName) {
+    public synchronized PlayerStats getPlayerStats(String playerName) {
         UUID playerUuid = com.jellypudding.offlineStats.utils.PlayerUtil.getPlayerUUID(playerName);
         if (playerUuid == null) {
             return null;
@@ -220,7 +227,7 @@ public class DatabaseManager {
         return getPlayerStats(playerUuid);
     }
 
-    public PlayerStats getPlayerStats(UUID playerUuid) {
+    public synchronized PlayerStats getPlayerStats(UUID playerUuid) {
         String query = "SELECT * FROM players WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -247,7 +254,7 @@ public class DatabaseManager {
         return null;
     }
 
-    public String getExistingRepType(UUID giverUuid, UUID receiverUuid) {
+    public synchronized String getExistingRepType(UUID giverUuid, UUID receiverUuid) {
         String query = "SELECT rep_type FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, giverUuid.toString());
@@ -263,7 +270,7 @@ public class DatabaseManager {
         }
     }
 
-    public void giveReputation(UUID giverUuid, UUID receiverUuid, boolean positive) {
+    public synchronized void giveReputation(UUID giverUuid, UUID receiverUuid, boolean positive) {
         String existingType = getExistingRepType(giverUuid, receiverUuid);
 
         if (existingType != null) {
@@ -282,7 +289,7 @@ public class DatabaseManager {
         updateRepRecord(giverUuid, receiverUuid, positive ? "positive" : "negative");
     }
 
-    private void incrementPositiveRep(UUID playerUuid) {
+    private synchronized void incrementPositiveRep(UUID playerUuid) {
         String query = "UPDATE players SET positive_rep = positive_rep + 1 WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -292,7 +299,7 @@ public class DatabaseManager {
         }
     }
 
-    private void decrementPositiveRep(UUID playerUuid) {
+    private synchronized void decrementPositiveRep(UUID playerUuid) {
         String query = "UPDATE players SET positive_rep = MAX(0, positive_rep - 1) WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -302,7 +309,7 @@ public class DatabaseManager {
         }
     }
 
-    private void incrementNegativeRep(UUID playerUuid) {
+    private synchronized void incrementNegativeRep(UUID playerUuid) {
         String query = "UPDATE players SET negative_rep = negative_rep + 1 WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -312,7 +319,7 @@ public class DatabaseManager {
         }
     }
 
-    private void decrementNegativeRep(UUID playerUuid) {
+    private synchronized void decrementNegativeRep(UUID playerUuid) {
         String query = "UPDATE players SET negative_rep = MAX(0, negative_rep - 1) WHERE uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -322,7 +329,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean canGiveReputation(UUID giverUuid, UUID receiverUuid) {
+    public synchronized boolean canGiveReputation(UUID giverUuid, UUID receiverUuid) {
         String query = "SELECT last_rep_time FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, giverUuid.toString());
@@ -341,7 +348,7 @@ public class DatabaseManager {
         }
     }
 
-    public long getRepCooldownRemaining(UUID giverUuid, UUID receiverUuid) {
+    public synchronized long getRepCooldownRemaining(UUID giverUuid, UUID receiverUuid) {
         String query = "SELECT last_rep_time FROM reputation_cooldowns WHERE giver_uuid = ? AND receiver_uuid = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, giverUuid.toString());
@@ -361,7 +368,7 @@ public class DatabaseManager {
         }
     }
 
-    private void updateRepRecord(UUID giverUuid, UUID receiverUuid, String repType) {
+    private synchronized void updateRepRecord(UUID giverUuid, UUID receiverUuid, String repType) {
         String query = """
             INSERT INTO reputation_cooldowns (giver_uuid, receiver_uuid, rep_type, last_rep_time) 
             VALUES (?, ?, ?, ?)
@@ -381,7 +388,7 @@ public class DatabaseManager {
         }
     }
 
-    public boolean hasMilestone(UUID playerUuid, String milestoneType, int milestoneValue) {
+    public synchronized boolean hasMilestone(UUID playerUuid, String milestoneType, int milestoneValue) {
         String query = "SELECT 1 FROM milestones WHERE uuid = ? AND milestone_type = ? AND milestone_value = ?";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -395,7 +402,7 @@ public class DatabaseManager {
         }
     }
 
-    public void addMilestone(UUID playerUuid, String milestoneType, int milestoneValue) {
+    public synchronized void addMilestone(UUID playerUuid, String milestoneType, int milestoneValue) {
         String query = "INSERT INTO milestones (uuid, milestone_type, milestone_value, achieved_at) VALUES (?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setString(1, playerUuid.toString());
@@ -412,8 +419,7 @@ public class DatabaseManager {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 
-    // Calculate current time played for online players
-    public long getCurrentTimePlayed(UUID playerUuid) {
+    public synchronized long getCurrentTimePlayed(UUID playerUuid) {
         PlayerStats stats = getPlayerStats(playerUuid);
         if (stats == null) return 0;
 
@@ -424,7 +430,7 @@ public class DatabaseManager {
         return totalTime;
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByTimePlayed(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByTimePlayed(int limit) {
         String query = """
             SELECT *,
                    CASE WHEN session_start > 0
@@ -463,32 +469,32 @@ public class DatabaseManager {
         return results;
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByKills(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByKills(int limit) {
         String query = "SELECT * FROM players ORDER BY kills DESC LIMIT ?";
         return executeLeaderboardQuery(query, limit);
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByDeaths(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByDeaths(int limit) {
         String query = "SELECT * FROM players ORDER BY deaths DESC LIMIT ?";
         return executeLeaderboardQuery(query, limit);
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByChatMessages(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByChatMessages(int limit) {
         String query = "SELECT * FROM players ORDER BY chat_messages DESC LIMIT ?";
         return executeLeaderboardQuery(query, limit);
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByPositiveRep(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByPositiveRep(int limit) {
         String query = "SELECT * FROM players ORDER BY (positive_rep - negative_rep) DESC LIMIT ?";
         return executeLeaderboardQuery(query, limit);
     }
 
-    public java.util.List<PlayerStats> getTopPlayersByNegativeRep(int limit) {
+    public synchronized java.util.List<PlayerStats> getTopPlayersByNegativeRep(int limit) {
         String query = "SELECT * FROM players ORDER BY (positive_rep - negative_rep) ASC LIMIT ?";
         return executeLeaderboardQuery(query, limit);
     }
 
-    private java.util.List<PlayerStats> executeLeaderboardQuery(String query, int limit) {
+    private synchronized java.util.List<PlayerStats> executeLeaderboardQuery(String query, int limit) {
         java.util.List<PlayerStats> results = new java.util.ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(query)) {
             stmt.setInt(1, limit);

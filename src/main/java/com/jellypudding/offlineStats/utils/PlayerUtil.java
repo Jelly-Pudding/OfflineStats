@@ -18,14 +18,9 @@ public class PlayerUtil {
             return onlinePlayer.getUniqueId();
         }
 
-        try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-            if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
-                return offlinePlayer.getUniqueId();
-            }
-        } catch (Exception e) {
-            // Player not found in Mojang API.
-            return null;
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayerIfCached(playerName);
+        if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
+            return offlinePlayer.getUniqueId();
         }
 
         return null;
@@ -37,17 +32,12 @@ public class PlayerUtil {
             return onlinePlayer.getName();
         }
 
-        try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-            if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
-                String cachedName = offlinePlayer.getName();
-                if (cachedName != null) {
-                    return cachedName;
-                }
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayerIfCached(playerName);
+        if (offlinePlayer != null && offlinePlayer.hasPlayedBefore()) {
+            String cachedName = offlinePlayer.getName();
+            if (cachedName != null) {
+                return cachedName;
             }
-        } catch (Exception e) {
-            // Player not found in Mojang API.
-            return playerName;
         }
 
         return playerName;

@@ -39,6 +39,12 @@ public final class OfflineStats extends JavaPlugin {
         databaseManager = new DatabaseManager(this);
         databaseManager.initialise();
 
+        if (!databaseManager.isInitialised()) {
+            getLogger().severe("Database failed to initialise. Disabling plugin.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         // Check for plugin integrations
         checkPluginIntegrations();
 

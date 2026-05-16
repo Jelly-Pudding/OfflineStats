@@ -15,19 +15,28 @@ public class AntiFarmingManager {
     private final Map<UUID, Map<UUID, List<Long>>> playerKills = new ConcurrentHashMap<>();
 
     // Configuration values (in milliseconds and count)
-    private final long TIME_WINDOW;
-    private final int MAX_DEATHS_IN_WINDOW;
-    private final int MAX_KILLS_SAME_VICTIM_IN_WINDOW;
+    private long TIME_WINDOW;
+    private int MAX_DEATHS_IN_WINDOW;
+    private int MAX_KILLS_SAME_VICTIM_IN_WINDOW;
 
     public AntiFarmingManager(OfflineStats plugin) {
         this.plugin = plugin;
+        loadConfig();
+    }
 
-        this.TIME_WINDOW = plugin.getConfig().getLong("anti-farming.time-window-minutes", 10) * 60 * 1000;
-        this.MAX_DEATHS_IN_WINDOW = plugin.getConfig().getInt("anti-farming.max-deaths-in-window", 20);
-        this.MAX_KILLS_SAME_VICTIM_IN_WINDOW = plugin.getConfig().getInt("anti-farming.max-kills-same-victim-in-window", 20);
+    private void loadConfig() {
+        TIME_WINDOW = plugin.getConfig().getLong("anti-farming.time-window-minutes", 10) * 60 * 1000;
+        MAX_DEATHS_IN_WINDOW = plugin.getConfig().getInt("anti-farming.max-deaths-in-window", 20);
+        MAX_KILLS_SAME_VICTIM_IN_WINDOW = plugin.getConfig().getInt("anti-farming.max-kills-same-victim-in-window", 20);
 
-        plugin.getLogger().info("AntiFarmingManager initialised with " + (TIME_WINDOW / 60000) + " minute window, " + 
+        plugin.getLogger().info("AntiFarmingManager initialised with " + (TIME_WINDOW / 60000) + " minute window, " +
                                MAX_DEATHS_IN_WINDOW + " max deaths, " + MAX_KILLS_SAME_VICTIM_IN_WINDOW + " max kills per victim");
+    }
+
+    public void reload() {
+        loadConfig();
+        playerDeaths.clear();
+        playerKills.clear();
     }
 
     public boolean shouldCountDeath(UUID playerUuid) {
