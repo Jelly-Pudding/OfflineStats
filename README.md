@@ -1,5 +1,5 @@
 # OfflineStats Plugin
-A comprehensive player statistics tracking plugin for Minecraft 26.1.2 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
+A comprehensive player statistics tracking plugin for Minecraft 26.2 servers. Specifically created for MinecraftOffline.net, this plugin tracks player statistics and provides milestone rewards through integration with other plugins.
 
 ## Features
 - **Player Statistics Tracking**: Time played, first seen, last seen, kills, deaths, chat messages, and reputation
